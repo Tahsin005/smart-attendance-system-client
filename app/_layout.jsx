@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider, useDispatch, useSelector } from "react-redux";
 import "../global.css";
-import { loadUser } from "../redux/authSlice";
+import { loadUser } from "../redux/slices/authSlice";
 import { store } from "../redux/store";
 
 function RouteGuard({ children }) {

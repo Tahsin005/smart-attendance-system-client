@@ -3,7 +3,7 @@ import { useState } from "react";
 import { ActivityIndicator, Alert, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useDispatch } from "react-redux";
 import { useLoginMutation } from "../redux/api/authApi";
-import { loginSuccess } from "../redux/authSlice";
+import { loginSuccess } from "../redux/slices/authSlice";
 
 export default function Auth() {
   const dispatch = useDispatch();
@@ -24,64 +24,81 @@ export default function Auth() {
   };
 
   return (
-    <View className="flex-1 bg-wise-bg p-6 justify-between">
-      <View className="mt-10 items-center">
-        <Text className="text-4xl font-extrabold text-wise-text text-center mt-6 leading-tight tracking-tighter">
-          Smart Attendance{"\n"}System
+    <View className="flex-1 bg-binance-bg p-6 justify-between">
+      <View className="mt-20 items-center">
+        <View className="w-16 h-16 bg-binance-yellow rounded-xl items-center justify-center rotate-45 mb-10">
+          <Ionicons name="finger-print" size={32} color="#1E2329" className="-rotate-45" />
+        </View>
+        <Text className="text-3xl font-bold text-binance-text text-center font-sans tracking-tight">
+          Smart Attendance
         </Text>
+        <Text className="text-binance-gray mt-2 font-sans">Effortless workforce management</Text>
       </View>
 
       <View className="mb-10">
         {!showLogin ? (
           <View className="space-y-4">
-            <View className="flex-row space-x-4">
-              <TouchableOpacity
-                onPress={() => setShowLogin(true)}
-                className="flex-1 bg-wise-lime p-5 rounded-full items-center shadow-sm"
-              >
-                <Text className="text-wise-dark font-bold text-lg">Log in</Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              onPress={() => setShowLogin(true)}
+              className="bg-binance-yellow p-4 rounded-lg items-center shadow-sm"
+            >
+              <Text className="text-binance-text font-bold text-lg font-sans">Login</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => Alert.alert("Admin only", "Registration is handled by the administrator.")}
+              className="bg-binance-lightGray p-4 rounded-lg items-center"
+            >
+              <Text className="text-binance-text font-bold text-lg font-sans">Register</Text>
+            </TouchableOpacity>
           </View>
         ) : (
-          <View className="space-y-4">
-            <View className="flex-row items-center mb-6">
+          <View>
+            <View className="flex-row items-center mb-10">
               <TouchableOpacity onPress={() => setShowLogin(false)} className="p-2 -ml-2">
-                <Ionicons name="arrow-back" size={24} color="#253342" />
+                <Ionicons name="arrow-back" size={24} color="#1E2329" />
               </TouchableOpacity>
-              <Text className="text-2xl font-bold text-wise-text ml-2">Welcome back</Text>
+              <Text className="text-2xl font-bold text-binance-text ml-4 font-sans">Welcome Back</Text>
             </View>
 
-            <TextInput
-              placeholder="Email"
-              placeholderTextColor="#94a3b8"
-              className="border border-wise-surface p-4 rounded-2xl bg-wise-surface text-wise-text text-lg"
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-            />
-            <TextInput
-              placeholder="Password"
-              placeholderTextColor="#94a3b8"
-              className="border border-wise-surface p-4 rounded-2xl bg-wise-surface text-wise-text text-lg"
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-            />
+            <View className="space-y-4">
+              <View>
+                <Text className="text-binance-gray text-xs font-bold mb-2 ml-1 uppercase">Email</Text>
+                <TextInput
+                  placeholder="Enter your email"
+                  placeholderTextColor="#707A8A"
+                  className="bg-binance-surface p-4 rounded-lg text-binance-text text-lg font-sans border border-binance-lightGray"
+                  value={email}
+                  onChangeText={setEmail}
+                  autoCapitalize="none"
+                />
+              </View>
 
-            <View className="mt-6">
-              {isLoginLoading ? (
-                <View className="bg-wise-lime p-5 rounded-full items-center">
-                  <ActivityIndicator color="#2E3333" />
-                </View>
-              ) : (
-                <TouchableOpacity
-                  onPress={handleLogin}
-                  className="bg-wise-lime p-5 rounded-full items-center shadow-sm"
-                >
-                  <Text className="text-wise-dark font-bold text-lg">Continue</Text>
-                </TouchableOpacity>
-              )}
+              <View className="mt-4">
+                <Text className="text-binance-gray text-xs font-bold mb-2 ml-1 uppercase">Password</Text>
+                <TextInput
+                  placeholder="Enter your password"
+                  placeholderTextColor="#707A8A"
+                  className="bg-binance-surface p-4 rounded-lg text-binance-text text-lg font-sans border border-binance-lightGray"
+                  secureTextEntry
+                  value={password}
+                  onChangeText={setPassword}
+                />
+              </View>
+
+              <View className="mt-8">
+                {isLoginLoading ? (
+                  <View className="bg-binance-yellow p-4 rounded-lg items-center opacity-70">
+                    <ActivityIndicator color="#1E2329" />
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    onPress={handleLogin}
+                    className="bg-binance-yellow p-4 rounded-lg items-center shadow-sm"
+                  >
+                    <Text className="text-binance-text font-bold text-lg font-sans">Log In</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
           </View>
         )}

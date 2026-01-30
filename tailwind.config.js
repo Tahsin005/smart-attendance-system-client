@@ -7,13 +7,18 @@ module.exports = {
   presets: [require("nativewind/preset")],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["System", "-apple-system", "BlinkMacSystemFont", "San Francisco", "Roboto", "Helvetica", "Arial", "sans-serif"],
+      },
       colors: {
-        wise: {
-          lime: "#9FE870",
-          dark: "#2E3333",
-          surface: "#F2F5F7",
+        binance: {
+          yellow: "#F0B90B",
+          dark: "#1E2329",
+          gray: "#707A8A",
+          surface: "#FAFAFA",
+          lightGray: "#EAECEF",
           bg: "#FFFFFF",
-          text: "#253342"
+          text: "#1E2329"
         }
       }
     },

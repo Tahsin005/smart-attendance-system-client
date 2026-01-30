@@ -1,114 +1,82 @@
+import ActionButton from "@/components/ActionButton";
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
-import { useRegisterMutation } from "../../redux/api/authApi";
-import { logout } from "../../redux/authSlice";
+import { logout } from "../../redux/slices/authSlice";
 
 export default function Home() {
     const { user, isAdmin } = useSelector((state) => state.auth);
     const dispatch = useDispatch();
 
-    const [registerApi, { isLoading: isRegisterLoading }] = useRegisterMutation();
-
-    const [regEmail, setRegEmail] = useState("");
-    const [regPassword, setRegPassword] = useState("");
-
-    const handleRegister = async () => {
-        try {
-            await registerApi({ email: regEmail, password: regPassword, role: "EMPLOYEE" }).unwrap();
-            Alert.alert("Success", "User registered successfully");
-            setRegEmail("");
-            setRegPassword("");
-        } catch (err) {
-            Alert.alert("Error", err.data?.message || "Registration failed");
-        }
-    };
-
-    const ActionButton = ({ icon, label, primary }) => (
-        <View className="items-center mr-6">
-            <TouchableOpacity
-                className={`w-14 h-14 rounded-full items-center justify-center ${primary ? 'bg-wise-lime' : 'bg-wise-surface'}`}
-            >
-                <Ionicons name={icon} size={24} color={primary ? "#2E3333" : "#2E3333"} />
-            </TouchableOpacity>
-            <Text className="mt-2 text-wise-text font-medium text-xs">{label}</Text>
-        </View>
-    );
-
     return (
-        <ScrollView className="flex-1 bg-wise-bg px-5 pt-14">
-            <View className="flex-row items-center justify-between mb-8">
-                <View className="flex-row items-center">
-                    <Text className="text-lg font-bold">{user?.email}</Text>
-                </View>
-                <TouchableOpacity className="w-10 h-10 bg-wise-surface rounded-full items-center justify-center">
-                    <Ionicons name="log-out-outline" onPress={() => dispatch(logout())} size={20} color="#2E3333" />
-                </TouchableOpacity>
-            </View>
-
-            {/* Action Buttons */}
-            <View className="flex-row mb-10">
-                <ActionButton icon="location" primary />
-                <ActionButton icon="home" />
-            </View>
-
-            <View className="bg-wise-surface p-6 rounded-[32px] mb-8 relative">
-                <View className="flex-row items-center mb-4">
-                    <View className="w-8 h-8 bg-white rounded-full items-center justify-center mr-3">
-                        <Ionicons name="time" size={18} color="#253342" />
+        <ScrollView className="flex-1 bg-binance-bg pb-10">
+            <View className="pt-14 px-5 bg-binance-bg pb-6 border-b border-binance-lightGray">
+                <View className="flex-row items-center justify-between mb-6">
+                    <View className="flex-row items-center">
+                        <View className="w-8 h-8 rounded-full bg-binance-lightGray items-center justify-center">
+                            <Ionicons name="person" size={16} color="#707A8A" />
+                        </View>
+                        <Text className="ml-3 text-binance-text font-sans font-bold text-sm">{user?.email}</Text>
                     </View>
-                    <Text className="text-lg text-wise-text font-bold">Attendance Today</Text>
-                </View>
-                <Text className="text-wise-text text-4xl font-black mb-1">09:00 AM</Text>
-                <Text className="text-wise-text/60 font-medium">Verified via Central Terminal</Text>
-                <TouchableOpacity className="absolute top-6 right-6">
-                    <Ionicons name="chevron-down" size={24} color="#253342" />
-                </TouchableOpacity>
-            </View>
-
-            {/* Admin Section */}
-            {isAdmin && (
-                <View className="mb-20">
-                    <View className="flex-row items-center justify-between mb-4">
-                        <Text className="text-2xl font-bold text-wise-text">Admin Portal</Text>
-                        <TouchableOpacity><Text className="text-green-600 font-bold">See all</Text></TouchableOpacity>
-                    </View>
-
-                    <View className="bg-white border border-wise-surface p-6 rounded-[32px] shadow-sm">
-                        <Text className="text-xl font-bold mb-6 text-wise-text">Register New Employee</Text>
-                        <TextInput
-                            placeholder="Email"
-                            placeholderTextColor="#94a3b8"
-                            className="border border-wise-surface p-4 rounded-2xl bg-wise-surface text-wise-text text-lg mb-4"
-                            value={regEmail}
-                            onChangeText={setRegEmail}
-                            autoCapitalize="none"
-                        />
-                        <TextInput
-                            placeholder="Password"
-                            placeholderTextColor="#94a3b8"
-                            className="border border-wise-surface p-4 rounded-2xl bg-wise-surface text-wise-text text-lg mb-6"
-                            secureTextEntry
-                            value={regPassword}
-                            onChangeText={setRegPassword}
-                        />
-
-                        {isRegisterLoading ? (
-                            <View className="bg-wise-lime p-5 rounded-full items-center">
-                                <ActivityIndicator color="#2E3333" />
-                            </View>
-                        ) : (
-                            <TouchableOpacity
-                                onPress={handleRegister}
-                                className="bg-wise-lime p-5 rounded-full items-center shadow-sm"
-                            >
-                                <Text className="text-wise-dark font-bold text-lg text-center">Register Employee</Text>
-                            </TouchableOpacity>
-                        )}
+                    <View className="flex-row space-x-4">
+                        <TouchableOpacity onPress={() => dispatch(logout())}>
+                            <Ionicons name="log-out-outline" size={24} color="#707A8A" />
+                        </TouchableOpacity>
                     </View>
                 </View>
-            )}
+            </View>
+
+            <View className="flex-row px-5 pt-6 pb-2 border-b border-binance-lightGray bg-binance-bg">
+                <ActionButton icon="location" label="Scan" primary />
+            </View>
+
+            <View className="px-5 mt-6">
+                <View className="bg-binance-yellow/20 p-4 rounded-xl flex-row items-center justify-between">
+                    <View className="flex-row items-center flex-1">
+                        <Ionicons name="megaphone" size={20} color="#F0B90B" />
+                        <Text className="ml-3 text-binance-text font-sans font-bold text-xs flex-1">Shift starts in 2 hours. Be prepared!</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={16} color="#F0B90B" />
+                </View>
+            </View>
+
+            <View className="px-5 mt-6 space-y-4">
+                <View className="flex-row space-x-4">
+                    <View className="flex-1 bg-binance-surface p-4 rounded-2xl border border-binance-lightGray">
+                        <Text className="text-binance-gray text-xs font-sans">Today's Start</Text>
+                        <Text className="text-xl font-bold text-binance-text font-sans mt-2">09:00 AM</Text>
+                        <View className="flex-row items-center mt-2">
+                            <Ionicons name="trending-up" size={12} color="#10b981" />
+                            <Text className="text-[#10b981] text-[10px] font-bold ml-1">On Time</Text>
+                        </View>
+                    </View>
+                    <View className="flex-1 bg-binance-surface p-4 rounded-2xl border border-binance-lightGray">
+                        <Text className="text-binance-gray text-xs font-sans">Current Status</Text>
+                        <Text className="text-xl font-bold text-binance-text font-sans mt-2">ACTIVE</Text>
+                        <View className="w-full h-1 bg-binance-lightGray rounded-full mt-3 overflow-hidden">
+                            <View className="w-1/2 h-full bg-binance-yellow" />
+                        </View>
+                    </View>
+                </View>
+
+                <View className="bg-binance-surface p-4 rounded-2xl border border-binance-lightGray flex-row items-center justify-between">
+                    <View className="flex-row items-center">
+                        <View className="w-10 h-10 bg-binance-yellow/10 rounded-full items-center justify-center">
+                            <Ionicons name="location" size={20} color="#F0B90B" />
+                        </View>
+                        <View className="ml-3">
+                            <Text className="text-binance-text font-bold font-sans">Main Entrance</Text>
+                            <Text className="text-binance-gray text-[10px] font-sans">Verified via Terminal A-1</Text>
+                        </View>
+                    </View>
+                    <View className="items-end">
+                        <Text className="text-binance-text font-bold font-sans">08:58</Text>
+                        <Text className="text-[#10b981] text-[10px] font-bold">SUCCESS</Text>
+                    </View>
+                </View>
+            </View>
+
+            <View className="pb-20" />
         </ScrollView>
     );
 }

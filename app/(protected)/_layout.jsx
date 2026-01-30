@@ -1,26 +1,36 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import { useSelector } from 'react-redux';
 
 export default function ProtectedLayout() {
+    const { isAdmin } = useSelector((state) => state.auth);
+
     return (
         <Tabs screenOptions={{
             tabBarStyle: {
                 backgroundColor: '#ffffff',
                 borderTopWidth: 1,
-                borderTopColor: '#f2f5f7',
-                height: 60,
-                paddingBottom: 10,
+                borderTopColor: '#EAECEF',
+                height: 65,
+                paddingBottom: 15,
+                paddingTop: 10,
             },
-            tabBarActiveTintColor: '#10b981',
-            tabBarInactiveTintColor: '#253342',
+            tabBarActiveTintColor: '#F0B90B',
+            tabBarInactiveTintColor: '#707A8A',
+            tabBarLabelStyle: {
+                fontFamily: 'sans-serif', // Fallback, managed by system
+                fontSize: 10,
+                fontWeight: '600',
+            },
             headerStyle: {
                 backgroundColor: '#ffffff',
                 elevation: 0,
                 shadowOpacity: 0,
             },
-            headerTintColor: '#253342',
+            headerTintColor: '#1E2329',
             headerTitleStyle: {
                 fontWeight: 'bold',
+                fontFamily: 'sans-serif',
             }
         }}>
             <Tabs.Screen
@@ -28,39 +38,20 @@ export default function ProtectedLayout() {
                 options={{
                     title: 'Home',
                     headerShown: false,
-                    tabBarIcon: ({ color, size }) => (
-                        <Ionicons name="home" size={24} color={color} />
+                    tabBarIcon: ({ color }) => (
+                        <Ionicons name="home" size={22} color={color} />
                     ),
                 }}
             />
             <Tabs.Screen
-                name="card"
+                name="admin"
                 options={{
-                    title: 'Card',
-                    tabBarIcon: ({ color, size }) => (
-                        <Ionicons name="card" size={24} color={color} />
+                    title: 'Admin',
+                    headerShown: false,
+                    href: isAdmin ? '/admin' : null,
+                    tabBarIcon: ({ color }) => (
+                        <Ionicons name="shield-checkmark" size={22} color={color} />
                     ),
-                }}
-                listeners={{
-                    tabPress: (e) => {
-                        e.preventDefault();
-                        alert('Card feature coming soon');
-                    },
-                }}
-            />
-            <Tabs.Screen
-                name="recipients"
-                options={{
-                    title: 'Recipients',
-                    tabBarIcon: ({ color, size }) => (
-                        <Ionicons name="people" size={24} color={color} />
-                    ),
-                }}
-                listeners={{
-                    tabPress: (e) => {
-                        e.preventDefault();
-                        alert('Recipients feature coming soon');
-                    },
                 }}
             />
         </Tabs>
