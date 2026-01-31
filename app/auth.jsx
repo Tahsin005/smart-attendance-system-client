@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from 'expo-location';
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, AppState, Linking, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import MapView, { Marker } from 'react-native-maps';
 import { useDispatch } from "react-redux";
 import { useLoginMutation } from "../redux/api/authApi";
@@ -32,18 +32,39 @@ export default function Auth() {
   const [showLogin, setShowLogin] = useState(false);
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [permissionStatus, setPermissionStatus] = useState('undetermined');
 
-  useEffect(() => {
-    (async () => {
+  const requestPermission = async () => {
+    try {
       let { status } = await Location.requestForegroundPermissionsAsync();
+      setPermissionStatus(status);
+
       if (status !== 'granted') {
         setErrorMsg('Permission to access location was denied');
         return;
       }
 
+      setErrorMsg(null);
       let location = await Location.getCurrentPositionAsync({});
       setLocation(location);
-    })();
+    } catch (err) {
+      setErrorMsg('An error occurred while fetching location');
+    }
+  };
+
+  useEffect(() => {
+    requestPermission();
+
+    // listen for app state changes (e.g., returning from Settings)
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      if (nextAppState === 'active') {
+        requestPermission();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
   const handleLogin = async () => {
@@ -117,7 +138,30 @@ export default function Auth() {
       </View>
 
       <View className="mb-10">
-        {!showLogin ? (
+        {permissionStatus !== 'granted' ? (
+          <View className="bg-binance-surface p-6 rounded-2xl border border-binance-lightGray/10 items-center">
+            <View className="w-12 h-12 bg-binance-bg rounded-full items-center justify-center mb-4">
+              <Ionicons
+                name={permissionStatus === 'denied' ? "alert-circle" : "location"}
+                size={24}
+                color={permissionStatus === 'denied' ? "#F6465D" : "#F0B90B"}
+                className=""
+              />
+            </View>
+            <Text className="text-binance-text font-bold text-lg text-center font-sans">
+              {permissionStatus === 'denied' ? "Location Restricted" : "Location Required"}
+            </Text>
+
+            <TouchableOpacity
+              onPress={permissionStatus === 'denied' ? () => Linking.openSettings() : requestPermission}
+              className="bg-binance-yellow px-8 py-3 rounded-lg shadow-sm w-full items-center"
+            >
+              <Text className="text-binance-text font-bold font-sans">
+                {permissionStatus === 'denied' ? "Open Settings" : "Enable Location"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : !showLogin ? (
           <View className="space-y-4">
             <TouchableOpacity
               onPress={() => setShowLogin(true)}
