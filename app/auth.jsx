@@ -16,8 +16,8 @@ export default function Auth() {
   const handleLogin = async () => {
     try {
       const result = await loginApi({ email, password }).unwrap();
-      dispatch(loginSuccess({ user: result.user, token: result.token }));
-      Alert.alert("Success", "Logged in successfully");
+      dispatch(loginSuccess({ user: result.data.user, token: result.data.token }));
+      Alert.alert("Success", result.message || "Logged in successfully");
     } catch (err) {
       Alert.alert("Error", err.data?.message || "Login failed");
     }
@@ -43,12 +43,6 @@ export default function Auth() {
               className="bg-binance-yellow p-4 rounded-lg items-center shadow-sm"
             >
               <Text className="text-binance-text font-bold text-lg font-sans">Login</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => Alert.alert("Admin only", "Registration is handled by the administrator.")}
-              className="bg-binance-lightGray p-4 rounded-lg items-center"
-            >
-              <Text className="text-binance-text font-bold text-lg font-sans">Register</Text>
             </TouchableOpacity>
           </View>
         ) : (

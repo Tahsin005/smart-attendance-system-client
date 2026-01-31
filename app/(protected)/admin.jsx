@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Redirect } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useSelector } from "react-redux";
@@ -16,8 +15,8 @@ export default function Admin() {
 
     const handleRegister = async () => {
         try {
-            await registerApi({ email: regEmail, password: regPassword, role: "EMPLOYEE" }).unwrap();
-            Alert.alert("Success", "User registered successfully");
+            const result = await registerApi({ email: regEmail, password: regPassword, role: "EMPLOYEE" }).unwrap();
+            Alert.alert("Success", result.message || "User registered successfully");
             setRegEmail("");
             setRegPassword("");
         } catch (err) {
