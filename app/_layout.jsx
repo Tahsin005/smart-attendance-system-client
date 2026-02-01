@@ -1,4 +1,4 @@
-import { Stack, useRouter, useSegments } from "expo-router";
+import { Stack, useRootNavigationState, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -10,19 +10,25 @@ import { store } from "../redux/store";
 function RouteGuard({ children }) {
   const router = useRouter();
   const segments = useSegments();
-  const { user, isRehydrated, isAuthenticated } = useSelector((state) => state.auth);
+  const navigationState = useRootNavigationState();
+  const { isRehydrated, isAuthenticated } = useSelector((state) => state.auth);
 
   useEffect(() => {
     if (!isRehydrated) return;
+    if (!navigationState?.key) return;
 
-    const inAuthGroup = segments[0] === "auth";
+    const inAuthScreen = segments[0] === "auth";
 
-    if (!isAuthenticated && !inAuthGroup) {
+    console.log('[RouteGuard] Ready - isAuthenticated:', isAuthenticated, 'inAuthScreen:', inAuthScreen, 'segments:', segments);
+
+    if (!isAuthenticated && !inAuthScreen) {
       router.replace("/auth");
-    } else if (isAuthenticated && inAuthGroup) {
+    } else if (isAuthenticated && inAuthScreen) {
+      router.replace("/(protected)");
+    } else if (isAuthenticated && segments.length === 0) {
       router.replace("/(protected)");
     }
-  }, [isAuthenticated, isRehydrated, segments]);
+  }, [isAuthenticated, isRehydrated, segments, router, navigationState?.key]);
 
   return <>{children}</>;
 }
