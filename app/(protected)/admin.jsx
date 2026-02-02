@@ -78,7 +78,7 @@ export default function Admin() {
                 </View>
 
                 <View className="mt-8 space-y-3">
-                    <TouchableOpacity className="flex-row items-center justify-between p-4 bg-binance-surface rounded-xl border border-binance-lightGray">
+                    <TouchableOpacity className="flex-row items-center justify-between p-4 bg-binance-surface rounded-xl border border-binance-lightGray mb-6">
                         <View className="flex-row items-center">
                             <Ionicons name="people" size={20} color="#1E2329" />
                             <Text className="ml-3 font-bold text-binance-text font-sans text-sm">Employee List</Text>
