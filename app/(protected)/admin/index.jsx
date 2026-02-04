@@ -1,11 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useSelector } from "react-redux";
-import { useRegisterMutation } from "../../redux/api/authApi";
+import { useRegisterMutation } from "../../../redux/api/authApi";
 
 export default function Admin() {
     const { isAdmin } = useSelector((state) => state.auth);
+    const router = useRouter();
 
 
     const [registerApi, { isLoading: isRegisterLoading }] = useRegisterMutation();
@@ -78,7 +80,10 @@ export default function Admin() {
                 </View>
 
                 <View className="mt-8 space-y-3">
-                    <TouchableOpacity className="flex-row items-center justify-between p-4 bg-binance-surface rounded-xl border border-binance-lightGray mb-6">
+                    <TouchableOpacity
+                        onPress={() => router.push("/(protected)/admin/employees")}
+                        className="flex-row items-center justify-between p-4 bg-binance-surface rounded-xl border border-binance-lightGray mb-6"
+                    >
                         <View className="flex-row items-center">
                             <Ionicons name="people" size={20} color="#1E2329" />
                             <Text className="ml-3 font-bold text-binance-text font-sans text-sm">Employee List</Text>
