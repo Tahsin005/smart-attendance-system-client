@@ -7,6 +7,7 @@ export default function AdminLayout() {
         }}>
             <Stack.Screen name="index" />
             <Stack.Screen name="employees" />
+            <Stack.Screen name="work-sessions" />
         </Stack>
     );
 }

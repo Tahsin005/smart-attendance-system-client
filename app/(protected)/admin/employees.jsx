@@ -1,16 +1,24 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, FlatList, RefreshControl, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, FlatList, RefreshControl, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useGetEmployeesQuery } from "../../../redux/api/adminApi";
 
 export default function Employees() {
+    const router = useRouter();
     const [search, setSearch] = useState("");
     const { data, isLoading, refetch, isFetching } = useGetEmployeesQuery({ email: search });
 
     const employees = data?.success ? data.data : [];
 
     const renderEmployee = ({ item }) => (
-        <View className="bg-binance-surface p-4 rounded-xl border border-binance-lightGray mb-3 shadow-sm">
+        <TouchableOpacity
+            onPress={() => router.push({
+                pathname: "/(protected)/admin/work-sessions",
+                params: { userId: item.id, email: item.email }
+            })}
+            className="bg-binance-surface p-4 rounded-xl border border-binance-lightGray mb-3 shadow-sm"
+        >
             <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center flex-1">
                     <View className="w-10 h-10 rounded-full bg-binance-bg items-center justify-center border border-binance-lightGray">
@@ -34,7 +42,7 @@ export default function Employees() {
                 </View>
                 <Ionicons name="chevron-forward" size={16} color="#707A8A" />
             </View>
-        </View>
+        </TouchableOpacity>
     );
 
     if (isLoading) {

@@ -20,7 +20,14 @@ export const adminApi = createApi({
                 params,
             }),
         }),
+        getUserWorkSessions: builder.query({
+            query: (params) => ({
+                url: '/work-sessions',
+                method: 'GET',
+                params,
+            }),
+        }),
     }),
 });
 
-export const { useGetEmployeesQuery } = adminApi;
+export const { useGetEmployeesQuery, useGetUserWorkSessionsQuery } = adminApi;
