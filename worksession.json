@@ -1,0 +1,41 @@
+{
+    "data": {
+        "created_at": "2026-02-04 14:28:44",
+        "end_lat": null,
+        "end_lng": null,
+        "end_selfie_url": null,
+        "end_time": null,
+        "id": 8,
+        "liveLocation": {
+            "lat": 23.8722042,
+            "lng": 90.3082413,
+            "recorded_at": "2026-02-04 18:33:54",
+            "work_session_id": 8
+        },
+        "locationLogs": [
+            {
+                "id": 1,
+                "work_session_id": 8,
+                "lat": 23.8722042,
+                "lng": 90.3082413,
+                "recorded_at": "2026-02-04 18:33:52"
+            },
+            {
+                "id": 2,
+                "work_session_id": 8,
+                "lat": 23.8725,
+                "lng": 90.3085,
+                "recorded_at": "2026-02-04 19:12:01"
+            }
+        ],
+        "start_lat": 23.8722042,
+        "start_lng": 90.3082413,
+        "start_selfie_url": "https://res.cloudinary.com/df0gfmbkh/image/upload/v1770215340/attendance-selfies/galabaovhvuetydgmb7l.jpg",
+        "start_time": "2026-02-04T14:29:01.499Z",
+        "status": "WORKING",
+        "user_id": 7,
+        "work_date": "2026-02-04"
+    },
+    "message": "Work session details retrieved successfully",
+    "success": true
+}

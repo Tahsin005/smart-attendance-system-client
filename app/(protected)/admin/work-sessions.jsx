@@ -1,14 +1,46 @@
 import { Ionicons } from "@expo/vector-icons";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ActivityIndicator, FlatList, RefreshControl, Text, View } from "react-native";
+import { useState } from "react";
+import { ActivityIndicator, FlatList, Platform, RefreshControl, Text, TouchableOpacity, View } from "react-native";
 import { useGetUserWorkSessionsQuery } from "../../../redux/api/adminApi";
 
 export default function WorkSessions() {
     const { userId, email } = useLocalSearchParams();
     const router = useRouter();
-    const { data, isLoading, refetch, isFetching } = useGetUserWorkSessionsQuery({ userId });
+
+    const [startDate, setStartDate] = useState(null);
+    const [endDate, setEndDate] = useState(null);
+    const [showStartPicker, setShowStartPicker] = useState(false);
+    const [showEndPicker, setShowEndPicker] = useState(false);
+
+    const formatParamsDate = (date) => {
+        if (!date) return undefined;
+        return date.toISOString().split('T')[0];
+    };
+
+    const displayDate = (date) => {
+        if (!date) return "Select Date";
+        return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+
+    const { data, isLoading, refetch, isFetching } = useGetUserWorkSessionsQuery({
+        userId,
+        startDate: formatParamsDate(startDate),
+        endDate: formatParamsDate(endDate)
+    });
 
     const sessions = data?.success ? data.data : [];
+
+    const onStartChange = (event, selectedDate) => {
+        setShowStartPicker(Platform.OS === 'ios');
+        if (selectedDate) setStartDate(selectedDate);
+    };
+
+    const onEndChange = (event, selectedDate) => {
+        setShowEndPicker(Platform.OS === 'ios');
+        if (selectedDate) setEndDate(selectedDate);
+    };
 
     const getStatusColor = (status) => {
         switch (status) {
@@ -20,7 +52,13 @@ export default function WorkSessions() {
     };
 
     const renderSession = ({ item }) => (
-        <View className="bg-binance-surface p-4 rounded-xl border border-binance-lightGray mb-3 shadow-sm">
+        <TouchableOpacity
+            onPress={() => router.push({
+                pathname: "/(protected)/admin/session-details",
+                params: { id: item.id }
+            })}
+            className="bg-binance-surface p-4 rounded-xl border border-binance-lightGray mb-3 shadow-sm"
+        >
             <View className="flex-row items-center justify-between">
                 <View className="flex-1">
                     <Text className="text-binance-text font-bold font-sans text-sm">
@@ -39,7 +77,7 @@ export default function WorkSessions() {
                 </View>
                 <Ionicons name="chevron-forward" size={16} color="#707A8A" />
             </View>
-        </View>
+        </TouchableOpacity>
     );
 
     if (isLoading) {
@@ -60,11 +98,69 @@ export default function WorkSessions() {
                     onPress={() => router.back()}
                     style={{ marginRight: 15 }}
                 />
-                <View>
+                <View className="flex-1">
                     <Text className="text-xl font-bold text-binance-text font-sans">Work Sessions</Text>
                     <Text className="text-binance-gray font-sans text-xs" numberOfLines={1}>{email}</Text>
                 </View>
             </View>
+
+            <View className="p-5 bg-binance-surface border-b border-binance-lightGray">
+                <View className="flex-row items-center gap-x-2">
+                    <View className="flex-1">
+                        <Text className="text-binance-gray text-[10px] font-bold mb-1 ml-1 uppercase">From</Text>
+                        <TouchableOpacity
+                            onPress={() => setShowStartPicker(true)}
+                            className="bg-binance-bg p-2.5 rounded-lg border border-binance-lightGray flex-row items-center justify-between"
+                        >
+                            <Text className={`font-sans text-xs ${startDate ? 'text-binance-text' : 'text-binance-gray'}`}>
+                                {displayDate(startDate)}
+                            </Text>
+                            <Ionicons name="calendar-outline" size={14} color="#707A8A" />
+                        </TouchableOpacity>
+                    </View>
+                    <View className="flex-1">
+                        <Text className="text-binance-gray text-[10px] font-bold mb-1 ml-1 uppercase">To</Text>
+                        <TouchableOpacity
+                            onPress={() => setShowEndPicker(true)}
+                            className="bg-binance-bg p-2.5 rounded-lg border border-binance-lightGray flex-row items-center justify-between"
+                        >
+                            <Text className={`font-sans text-xs ${endDate ? 'text-binance-text' : 'text-binance-gray'}`}>
+                                {displayDate(endDate)}
+                            </Text>
+                            <Ionicons name="calendar-outline" size={14} color="#707A8A" />
+                        </TouchableOpacity>
+                    </View>
+                    {(startDate || endDate) && (
+                        <TouchableOpacity
+                            onPress={() => { setStartDate(null); setEndDate(null); }}
+                            className="mt-5 p-2 bg-binance-bg rounded-lg border border-binance-lightGray shadow-sm active:bg-binance-lightGray"
+                        >
+                            <Ionicons name="trash-outline" size={18} color="#707A8A" />
+                        </TouchableOpacity>
+                    )}
+                </View>
+            </View>
+
+            {showStartPicker && (
+                <DateTimePicker
+                    value={startDate || new Date()}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={onStartChange}
+                    maximumDate={endDate || new Date()}
+                />
+            )}
+
+            {showEndPicker && (
+                <DateTimePicker
+                    value={endDate || new Date()}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={onEndChange}
+                    minimumDate={startDate}
+                    maximumDate={new Date()}
+                />
+            )}
 
             <FlatList
                 data={sessions}
