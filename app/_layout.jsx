@@ -6,6 +6,7 @@ import { Provider, useDispatch, useSelector } from "react-redux";
 import "../global.css";
 import { loadUser } from "../redux/slices/authSlice";
 import { store } from "../redux/store";
+import "../tasks/locationTask"; // Register background task
 
 function RouteGuard({ children }) {
   const router = useRouter();

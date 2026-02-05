@@ -90,14 +90,6 @@ export default function Admin() {
                         </View>
                         <Ionicons name="chevron-forward" size={16} color="#707A8A" />
                     </TouchableOpacity>
-
-                    <TouchableOpacity className="flex-row items-center justify-between p-4 bg-binance-surface rounded-xl border border-binance-lightGray">
-                        <View className="flex-row items-center">
-                            <Ionicons name="document-text" size={20} color="#1E2329" />
-                            <Text className="ml-3 font-bold text-binance-text font-sans text-sm">Shift Reports</Text>
-                        </View>
-                        <Ionicons name="chevron-forward" size={16} color="#707A8A" />
-                    </TouchableOpacity>
                 </View>
             </View>
         </ScrollView>

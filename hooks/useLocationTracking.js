@@ -1,65 +1,87 @@
+import * as BackgroundTask from 'expo-background-task';
+import Constants, { AppOwnership } from 'expo-constants';
 import * as Location from 'expo-location';
+import * as TaskManager from 'expo-task-manager';
 import { useEffect, useRef } from 'react';
-import { useGetTodaySessionQuery, useUpdateLocationMutation } from '../redux/api/workSessionApi';
+import { AppState } from 'react-native';
+import { useGetTodaySessionQuery } from '../redux/api/workSessionApi';
+import { LOCATION_UPDATE_TASK } from '../tasks/locationTask';
+
+const isExpoGo = Constants.appOwnership === AppOwnership.Expo;
 
 export const useLocationTracking = () => {
     const { data: sessionData } = useGetTodaySessionQuery();
-    const [updateLocation] = useUpdateLocationMutation();
-    const intervalRef = useRef(null);
+    const appState = useRef(AppState.currentState);
 
     useEffect(() => {
-        const startTracking = async () => {
+        const subscription = AppState.addEventListener('change', nextAppState => {
+            const statusMessage = `[AppState] Changed from ${appState.current} to ${nextAppState}`;
+            const separator = '='.repeat(statusMessage.length);
+
+            console.log('\n' + separator);
+            console.log(statusMessage);
+            console.log(separator + '\n');
+
+            appState.current = nextAppState;
+        });
+
+        return () => {
+            subscription.remove();
+        };
+    }, []);
+
+    useEffect(() => {
+        const toggleTracking = async () => {
             const isWorking = sessionData?.success && sessionData?.data?.status === 'WORKING';
 
             if (isWorking) {
-                // initial check for permissions
-                let { status } = await Location.requestForegroundPermissionsAsync();
-                if (status !== 'granted') {
-                    console.warn('[LocationTracking] Permission denied');
+                // request Permissions (Foreground + Background)
+                const { status: fgStatus } = await Location.requestForegroundPermissionsAsync();
+                if (fgStatus !== 'granted') {
+                    console.warn('[LocationTracking] Foreground permission denied');
                     return;
                 }
 
-                // set up interval for every 10 seconds
-                if (!intervalRef.current) {
-                    console.log('[LocationTracking] Starting timer...');
-                    intervalRef.current = setInterval(async () => {
-                        console.log('- [LocationTracking] TICK -');
-                        try {
-                            const location = await Location.getCurrentPositionAsync({
-                                accuracy: Location.Accuracy.Highest,
-                            });
+                const { status: bgStatus } = await Location.requestBackgroundPermissionsAsync();
+                if (bgStatus !== 'granted') {
+                    console.warn('[LocationTracking] Background permission denied');
+                }
 
-                            const { latitude, longitude } = location.coords;
+                if (isExpoGo) {
+                    console.log('[LocationTracking] Background Task is not supported in Expo Go. Skipping registration.');
+                    return;
+                }
 
-                            await updateLocation({
-                                lat: latitude,
-                                lng: longitude,
-                            }).unwrap();
-
-                            console.log(`[LocationTracking] Success (${new Date().toLocaleTimeString()}): ${latitude}, ${longitude}`);
-                        } catch (error) {
-                            console.error('[LocationTracking] Error:', error);
-                        }
-                    }, 10000);
+                try {
+                    const isRegistered = await TaskManager.isTaskRegisteredAsync(LOCATION_UPDATE_TASK);
+                    if (!isRegistered) {
+                        console.log('[LocationTracking] Registering Background Fetch...');
+                        await BackgroundTask.registerTaskAsync(LOCATION_UPDATE_TASK, {
+                            minimumInterval: 15 * 60, // 15 minutes
+                            stopOnTerminate: false,
+                            startOnBoot: true,
+                        });
+                        console.log('[LocationTracking] Background Fetch registered successfully.');
+                    }
+                } catch (err) {
+                    console.error('[LocationTracking] Registration failed:', err);
                 }
             } else {
-                // if not working, clear existing tracker
-                if (intervalRef.current) {
-                    console.log('[LocationTracking] Stopping tracker (not working)...');
-                    clearInterval(intervalRef.current);
-                    intervalRef.current = null;
+                // unregister if not working
+                if (isExpoGo) return;
+
+                try {
+                    const isRegistered = await TaskManager.isTaskRegisteredAsync(LOCATION_UPDATE_TASK);
+                    if (isRegistered) {
+                        console.log('[LocationTracking] Unregistering Background Fetch (not working)...');
+                        await BackgroundTask.unregisterTaskAsync(LOCATION_UPDATE_TASK);
+                    }
+                } catch (err) {
+                    console.error('[LocationTracking] Unregistration failed:', err);
                 }
             }
         };
 
-        startTracking();
-
-        return () => {
-            if (intervalRef.current) {
-                console.log('[LocationTracking] Cleanup: stopping timer');
-                clearInterval(intervalRef.current);
-                intervalRef.current = null;
-            }
-        };
-    }, [sessionData, updateLocation]);
+        toggleTracking();
+    }, [sessionData]);
 };
