@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
-import MapView, { Marker, Polyline } from "react-native-maps";
+// import MapView, { Marker, Polyline } from "react-native-maps";
 import { useGetSessionDetailsQuery } from "../../../redux/api/workSessionApi";
 
 import { useEffect, useRef } from "react";
@@ -112,7 +112,7 @@ export default function SessionDetails() {
             <ScrollView className="flex-1">
                 <View className="px-5 mt-4">
                     <View style={styles.mapContainer}>
-                        <MapView
+                        {/* <MapView
                             ref={mapRef}
                             style={styles.map}
                             initialRegion={initialRegion}
@@ -148,7 +148,7 @@ export default function SessionDetails() {
                                     lineDashPattern={[0]}
                                 />
                             )}
-                        </MapView>
+                        </MapView> */}
 
                         {liveLoc && (
                             <TouchableOpacity

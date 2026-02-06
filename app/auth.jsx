@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Location from 'expo-location';
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, AppState, Keyboard, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
-import MapView, { Marker } from 'react-native-maps';
+// import MapView, { Marker } from 'react-native-maps';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDispatch } from "react-redux";
 import { useLoginMutation } from "../redux/api/authApi";
@@ -92,7 +92,7 @@ export default function Auth() {
             <View className="flex-1 p-6 justify-between">
               <View className="mt-12 items-center">
                 <View style={styles.mapContainer}>
-                  <MapView
+                  {/* <MapView
                     style={styles.map}
                     region={location ? {
                       latitude: location.coords.latitude,
@@ -110,7 +110,7 @@ export default function Auth() {
                         title="Your Location"
                       />
                     )}
-                  </MapView>
+                  </MapView> */}
 
                   {/* subtle Location Badge floating on map */}
                   <View className="absolute bottom-3 left-3 bg-binance-bg/80 px-3 py-1.5 rounded-full border border-binance-lightGray/20">
