@@ -57,7 +57,7 @@ export default function StatusCard({ session, isLoading }) {
 
     const config = getStatusConfig();
 
-    if (isLoading) {
+    if (isLoading && !session) {
         return (
             <View className="bg-binance-surface p-4 rounded-2xl border border-binance-lightGray">
                 <View className="items-center py-4">

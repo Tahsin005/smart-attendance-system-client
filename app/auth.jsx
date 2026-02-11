@@ -6,6 +6,7 @@ import { ActivityIndicator, Alert, AppState, Keyboard, KeyboardAvoidingView, Lin
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDispatch } from "react-redux";
 import { useLoginMutation } from "../redux/api/authApi";
+import { useCheckHealthQuery } from "../redux/api/healthApi";
 import { loginSuccess } from "../redux/slices/authSlice";
 
 const styles = StyleSheet.create({
@@ -27,6 +28,7 @@ const styles = StyleSheet.create({
 export default function Auth() {
   const dispatch = useDispatch();
   const [loginApi, { isLoading: isLoginLoading }] = useLoginMutation();
+  const { data: healthData, isSuccess: isHealthSuccess, isError: isHealthError, isLoading: isHealthLoading, refetch: refetchHealth } = useCheckHealthQuery();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -112,14 +114,29 @@ export default function Auth() {
                     )}
                   </MapView> */}
 
-                  {/* subtle Location Badge floating on map */}
-                  <View className="absolute bottom-3 left-3 bg-binance-bg/80 px-3 py-1.5 rounded-full border border-binance-lightGray/20">
-                    <View className="flex-row items-center">
-                      <View className={`w-2 h-2 rounded-full mr-2 ${location ? 'bg-green-500' : 'bg-binance-yellow'}`} />
-                      <Text className="text-binance-text text-[10px] font-sans font-bold uppercase tracking-wider">
-                        {location ? 'GPS Active' : 'Locating...'}
-                      </Text>
+                  <View className="absolute bottom-3 left-3 flex-row space-x-2">
+                    {/* Location Badge */}
+                    <View className="bg-binance-bg/80 px-3 py-1.5 rounded-full border border-binance-lightGray/20">
+                      <View className="flex-row items-center">
+                        <View className={`w-2 h-2 rounded-full mr-2 ${location ? 'bg-green-500' : 'bg-binance-yellow'}`} />
+                        <Text className="text-binance-text text-[10px] font-sans font-bold uppercase tracking-wider">
+                          {location ? 'GPS Active' : 'Locating...'}
+                        </Text>
+                      </View>
                     </View>
+
+                    {/* Server Health Badge */}
+                    <TouchableOpacity
+                      onPress={() => refetchHealth()}
+                      className="bg-binance-bg/80 px-3 py-1.5 rounded-full border border-binance-lightGray/20"
+                    >
+                      <View className="flex-row items-center">
+                        <View className={`w-2 h-2 rounded-full mr-2 ${isHealthSuccess ? 'bg-green-500' : isHealthError ? 'bg-red-500' : 'bg-binance-yellow'}`} />
+                        <Text className="text-binance-text text-[10px] font-sans font-bold uppercase tracking-wider">
+                          {isHealthLoading ? 'Checking...' : isHealthSuccess ? 'Server: UP' : 'Server: OFFLINE'}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
                   </View>
                 </View>
 

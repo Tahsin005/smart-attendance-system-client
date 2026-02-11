@@ -1,6 +1,7 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import { adminApi } from './api/adminApi';
 import { authApi } from './api/authApi';
+import { healthApi } from './api/healthApi';
 import { workSessionApi } from './api/workSessionApi';
 import authReducer from './slices/authSlice';
 
@@ -9,6 +10,7 @@ const appReducer = combineReducers({
     [authApi.reducerPath]: authApi.reducer,
     [workSessionApi.reducerPath]: workSessionApi.reducer,
     [adminApi.reducerPath]: adminApi.reducer,
+    [healthApi.reducerPath]: healthApi.reducer,
 });
 
 const rootReducer = (state, action) => {
@@ -37,5 +39,6 @@ export const store = configureStore({
         getDefaultMiddleware()
             .concat(authApi.middleware)
             .concat(workSessionApi.middleware)
-            .concat(adminApi.middleware),
+            .concat(adminApi.middleware)
+            .concat(healthApi.middleware),
 });

@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useState } from "react";
-import { Alert, Modal, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Modal, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import AttendanceButton from "../../components/AttendanceButton";
 import SelfieCamera from "../../components/SelfieCamera";
@@ -19,7 +19,7 @@ export default function Home() {
     const dispatch = useDispatch();
 
     // work session state
-    const { data: sessionData, isLoading: isSessionLoading, refetch } = useGetTodaySessionQuery();
+    const { data: sessionData, isLoading: isSessionInitialLoading, isFetching: isSessionFetching, refetch } = useGetTodaySessionQuery();
     const [startWork, { isLoading: isStarting }] = useStartWorkMutation();
     const [endWork, { isLoading: isEnding }] = useEndWorkMutation();
 
@@ -109,6 +109,13 @@ export default function Home() {
             }
 
             Alert.alert('Error', errorMessage);
+
+            // If we get a 400 error indicating work already started, 
+            // the UI is likely stale. Refetch to sync state.
+            if (error?.status === 400 || error?.data?.message?.includes('already been started')) {
+                console.log('[Home] Session sync error detected, refetching...');
+                refetch();
+            }
         } finally {
             setIsSubmitting(false);
             setActionType(null);
@@ -120,11 +127,25 @@ export default function Home() {
         setActionType(null);
     }, []);
 
-    const isLoading = isSessionLoading || isStarting || isEnding || isSubmitting;
+    const handleRefresh = useCallback(() => {
+        refetch();
+    }, [refetch]);
+
+    const isLoading = isSessionInitialLoading || isSessionFetching || isStarting || isEnding || isSubmitting;
 
     return (
         <>
-            <ScrollView className="flex-1 bg-binance-bg pb-10">
+            <ScrollView
+                className="flex-1 bg-binance-bg pb-10"
+                refreshControl={
+                    <RefreshControl
+                        refreshing={isSessionFetching}
+                        onRefresh={handleRefresh}
+                        tintColor="#F0B90B" // Binance Yellow
+                        colors={["#F0B90B"]}
+                    />
+                }
+            >
                 <View className="pt-14 px-5 bg-binance-bg pb-6 border-b border-binance-lightGray">
                     <View className="flex-row items-center justify-between mb-6">
                         <View className="flex-row items-center">
@@ -147,7 +168,7 @@ export default function Home() {
                 </View>
 
                 <View className="px-5 mt-6">
-                    <StatusCard session={session} isLoading={isSessionLoading} />
+                    <StatusCard session={session} isLoading={isSessionInitialLoading} />
                 </View>
                 <View className="px-5 mt-6">
                     <AttendanceButton
