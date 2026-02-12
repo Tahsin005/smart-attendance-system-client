@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from 'expo-haptics';
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { ActivityIndicator, FlatList, RefreshControl, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useGetEmployeesQuery } from "../../../redux/api/adminApi";
 
@@ -11,39 +12,61 @@ export default function Employees() {
 
     const employees = data?.success ? data.data : [];
 
-    const renderEmployee = ({ item }) => (
-        <TouchableOpacity
-            onPress={() => router.push({
-                pathname: "/(protected)/admin/work-sessions",
-                params: { userId: item.id, email: item.email }
-            })}
-            className="bg-binance-surface p-4 rounded-xl border border-binance-lightGray mb-3 shadow-sm"
-        >
-            <View className="flex-row items-center justify-between">
-                <View className="flex-row items-center flex-1">
-                    <View className="w-10 h-10 rounded-full bg-binance-bg items-center justify-center border border-binance-lightGray">
-                        <Ionicons name="person" size={20} color="#707A8A" />
-                    </View>
-                    <View className="ml-3 flex-1">
-                        <Text className="text-binance-text font-bold font-sans text-sm" numberOfLines={1}>
-                            {item.email}
-                        </Text>
-                        <View className="flex-row items-center mt-1">
-                            <View className="bg-binance-yellow/10 px-2 py-0.5 rounded">
-                                <Text className="text-binance-yellow text-[10px] font-bold uppercase">
-                                    {item.role}
+    const renderEmployee = useCallback(({ item, index }) => (
+        <View>
+            <TouchableOpacity
+                onPress={() => {
+                    Haptics.selectionAsync();
+                    router.push({
+                        pathname: "/(protected)/admin/work-sessions",
+                        params: { userId: item.id, email: item.email }
+                    });
+                }}
+                activeOpacity={0.8}
+                className="bg-binance-surface p-5 rounded-[28px] border border-binance-lightGray/30 mb-4 shadow-sm"
+            >
+                <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center flex-1">
+                        <View className="w-12 h-12 rounded-2xl bg-binance-lightGray/10 items-center justify-center border border-binance-lightGray/5">
+                            <Ionicons name="person-outline" size={22} color="#707A8A" />
+                        </View>
+                        <View className="ml-4 flex-1">
+                            <Text className="text-binance-text font-bold font-sans text-base tracking-tight" numberOfLines={1}>
+                                {item.email}
+                            </Text>
+                            <View className="flex-row items-center mt-1.5">
+                                <View className="bg-binance-yellow/10 px-2.5 py-0.5 rounded-lg border border-binance-yellow/5">
+                                    <Text className="text-binance-yellow text-[10px] font-bold uppercase tracking-widest">
+                                        {item.role}
+                                    </Text>
+                                </View>
+                                <Text className="text-binance-gray text-[10px] ml-3 font-sans font-bold opacity-40 uppercase tracking-tighter">
+                                    Since {new Date(item.created_at).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
                                 </Text>
                             </View>
-                            <Text className="text-binance-gray text-[10px] ml-2 font-sans">
-                                Joined {new Date(item.created_at).toLocaleDateString()}
-                            </Text>
                         </View>
                     </View>
+                    <View className="w-8 h-8 rounded-full bg-binance-lightGray/5 items-center justify-center border border-binance-lightGray/5">
+                        <Ionicons name="chevron-forward" size={14} color="#707A8A" />
+                    </View>
                 </View>
-                <Ionicons name="chevron-forward" size={16} color="#707A8A" />
-            </View>
-        </TouchableOpacity>
-    );
+            </TouchableOpacity>
+        </View>
+    ), [router]);
+
+    const handleSearch = useCallback((text) => {
+        setSearch(text);
+    }, []);
+
+    const handleClearSearch = useCallback(() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        setSearch("");
+    }, []);
+
+    const handleRefresh = useCallback(() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        refetch();
+    }, [refetch]);
 
     if (isLoading) {
         return (
@@ -55,24 +78,30 @@ export default function Employees() {
 
     return (
         <View className="flex-1 bg-binance-bg">
-            <View className="pt-14 px-5 pb-6 border-b border-binance-lightGray bg-binance-bg">
-                <Text className="text-2xl font-bold text-binance-text font-sans">Employee List</Text>
-                <Text className="text-binance-gray font-sans text-xs mt-1">View and manage your workforce</Text>
+            <View
+                className="pt-14 px-6 pb-8 border-b border-binance-lightGray/10 bg-binance-bg"
+            >
+                <Text className="text-3xl font-bold text-binance-text font-sans tracking-tight">Employee Registry</Text>
+                <Text className="text-binance-gray font-sans text-sm mt-1 opacity-70">Monitor and manage access lifecycle</Text>
             </View>
 
-            <View className="px-5 pt-4">
-                <View className="flex-row items-center bg-binance-surface border border-binance-lightGray rounded-xl px-3 py-2">
-                    <Ionicons name="search" size={18} color="#707A8A" />
+            <View
+                className="px-6 pt-6 mb-2"
+            >
+                <View className="flex-row items-center bg-binance-surface border border-binance-lightGray/30 rounded-[20px] px-4 py-3.5 shadow-sm">
+                    <Ionicons name="search-outline" size={20} color="#707A8A" />
                     <TextInput
-                        className="flex-1 ml-2 text-binance-text font-sans text-sm"
-                        placeholder="Search by email"
+                        className="flex-1 ml-3 text-binance-text font-sans text-base tracking-tight"
+                        placeholder="Search identities..."
                         placeholderTextColor="#707A8A"
                         value={search}
-                        onChangeText={setSearch}
+                        onChangeText={handleSearch}
                         autoCapitalize="none"
                     />
                     {search !== "" && (
-                        <Ionicons name="close-circle" size={18} color="#707A8A" onPress={() => setSearch("")} />
+                        <TouchableOpacity onPress={handleClearSearch} activeOpacity={0.7}>
+                            <Ionicons name="close-circle" size={20} color="#707A8A" className="opacity-60" />
+                        </TouchableOpacity>
                     )}
                 </View>
             </View>
@@ -81,15 +110,25 @@ export default function Employees() {
                 data={employees}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={renderEmployee}
-                contentContainerClassName="p-5"
+                contentContainerClassName="px-6 pt-4 pb-10"
+                showsVerticalScrollIndicator={false}
                 ListEmptyComponent={
-                    <View className="items-center justify-center py-20">
-                        <Ionicons name="people-outline" size={64} color="#707A8A" className="opacity-20" />
-                        <Text className="text-binance-gray font-sans mt-4">No employees found</Text>
+                    <View
+                        className="items-center justify-center py-20"
+                    >
+                        <View className="w-20 h-20 bg-binance-lightGray/10 rounded-[32px] items-center justify-center mb-6">
+                            <Ionicons name="people-outline" size={32} color="#707A8A" className="opacity-40" />
+                        </View>
+                        <Text className="text-binance-gray font-bold font-sans text-base opacity-60">No identities match your query</Text>
                     </View>
                 }
                 refreshControl={
-                    <RefreshControl refreshing={isFetching} onRefresh={refetch} tintColor="#F0B90B" />
+                    <RefreshControl
+                        refreshing={isFetching}
+                        onRefresh={handleRefresh}
+                        tintColor="#F0B90B"
+                        colors={["#F0B90B"]}
+                    />
                 }
             />
         </View>

@@ -1,29 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from 'expo-location';
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, AppState, Keyboard, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
-// import MapView, { Marker } from 'react-native-maps';
+import { ActivityIndicator, Alert, AppState, Keyboard, KeyboardAvoidingView, Linking, Platform, ScrollView, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
+import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDispatch } from "react-redux";
 import { useLoginMutation } from "../redux/api/authApi";
 import { useCheckHealthQuery } from "../redux/api/healthApi";
 import { loginSuccess } from "../redux/slices/authSlice";
 
-const styles = StyleSheet.create({
-  mapContainer: {
-    width: '100%',
-    height: 220,
-    borderRadius: 20,
-    overflow: 'hidden',
-    backgroundColor: '#1E2329',
-    borderWidth: 1,
-    borderColor: '#2B3139',
-    marginBottom: -32, // allow logo to overlap slightly
-  },
-  map: {
-    flex: 1,
-  },
-})
 
 export default function Auth() {
   const dispatch = useDispatch();
@@ -71,13 +56,20 @@ export default function Auth() {
   }, []);
 
   const handleLogin = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
       const result = await loginApi({ email, password }).unwrap();
       dispatch(loginSuccess({ user: result.data.user, token: result.data.token }));
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Alert.alert("Success", result.message || "Logged in successfully");
     } catch (err) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert("Error", err.data?.message || "Login failed");
     }
+  };
+
+  const onButtonPress = () => {
+    Haptics.selectionAsync();
   };
 
   return (
@@ -93,157 +85,205 @@ export default function Auth() {
           >
             <View className="flex-1 p-6 justify-between">
               <View className="mt-12 items-center">
-                <View style={styles.mapContainer}>
-                  {/* <MapView
-                    style={styles.map}
-                    region={location ? {
-                      latitude: location.coords.latitude,
-                      longitude: location.coords.longitude,
-                      latitudeDelta: 0.005,
-                      longitudeDelta: 0.005,
-                    } : undefined}
-                  >
-                    {location && (
-                      <Marker
-                        coordinate={{
-                          latitude: location.coords.latitude,
-                          longitude: location.coords.longitude,
-                        }}
-                        title="Your Location"
-                      />
-                    )}
-                  </MapView> */}
 
-                  <View className="absolute bottom-3 left-3 flex-row space-x-2">
-                    {/* Location Badge */}
-                    <View className="bg-binance-bg/80 px-3 py-1.5 rounded-full border border-binance-lightGray/20">
-                      <View className="flex-row items-center">
-                        <View className={`w-2 h-2 rounded-full mr-2 ${location ? 'bg-green-500' : 'bg-binance-yellow'}`} />
-                        <Text className="text-binance-text text-[10px] font-sans font-bold uppercase tracking-wider">
-                          {location ? 'GPS Active' : 'Locating...'}
-                        </Text>
-                      </View>
+                <View className="w-full h-56 rounded-3xl overflow-hidden bg-binance-bg border border-binance-lightGray/10 shadow-sm relative mb-8">
+                  <View className="absolute inset-0 bg-binance-yellow/5" />
+
+                  {/* Visual Art/Logo Area */}
+                  <View className="flex-1 items-center justify-center p-8">
+                    <View
+                      className="w-20 h-20 bg-binance-bg rounded-[24px] items-center justify-center shadow-2xl border-2 border-binance-lightGray/20 rotate-12"
+                    >
+                      <Ionicons name="finger-print" size={40} color="#F0B90B" className="-rotate-12" />
                     </View>
+                  </View>
+
+
+                  <View className="absolute bottom-4 left-4 flex-row space-x-2">
+                    {/* Location Badge */}
+                    <View
+                      className="bg-binance-bg/90 px-3 py-2 rounded-xl border border-binance-lightGray/20 flex-row items-center shadow-sm"
+                    >
+                      <View className={`w-2 h-2 rounded-full mr-2 ${location ? 'bg-green-500' : 'bg-binance-yellow'}`} />
+                      <Text className="text-binance-text text-[10px] font-sans font-bold uppercase tracking-wider">
+                        {location ? 'GPS Active' : 'Locating...'}
+                      </Text>
+                    </View>
+
 
                     {/* Server Health Badge */}
                     <TouchableOpacity
-                      onPress={() => refetchHealth()}
-                      className="bg-binance-bg/80 px-3 py-1.5 rounded-full border border-binance-lightGray/20"
+                      onPress={() => {
+                        onButtonPress();
+                        refetchHealth();
+                      }}
                     >
-                      <View className="flex-row items-center">
+                      <View
+                        className="bg-binance-bg/90 px-3 py-2 rounded-xl border border-binance-lightGray/20 flex-row items-center shadow-sm"
+                      >
                         <View className={`w-2 h-2 rounded-full mr-2 ${isHealthSuccess ? 'bg-green-500' : isHealthError ? 'bg-red-500' : 'bg-binance-yellow'}`} />
                         <Text className="text-binance-text text-[10px] font-sans font-bold uppercase tracking-wider">
-                          {isHealthLoading ? 'Checking...' : isHealthSuccess ? 'Server: UP' : 'Server: OFFLINE'}
+                          {isHealthLoading ? 'Checking...' : isHealthSuccess ? 'Health: OK' : 'Health: ERR'}
                         </Text>
                       </View>
+
                     </TouchableOpacity>
                   </View>
                 </View>
 
-                <View className="z-10 w-16 h-16 bg-binance-yellow rounded-2xl items-center justify-center rotate-45 mb-8 shadow-lg border-4 border-binance-bg">
-                  <Ionicons name="finger-print" size={32} color="#1E2329" className="-rotate-45" />
-                </View>
-
-                <Text className="text-3xl font-bold text-binance-text text-center font-sans tracking-tight">
+                <Text
+                  className="text-4xl font-bold text-binance-text text-center font-sans tracking-tight"
+                >
                   Smart Attendance
                 </Text>
-                <Text className="text-binance-gray mt-1 font-sans text-center">Effortless workforce management</Text>
+                <Text
+                  className="text-binance-gray mt-2 font-sans text-center text-base"
+                >
+                  Precision workforce tracking & analytics
+                </Text>
+
 
                 {location && (
-                  <View className="flex-row mt-4 space-x-3">
-                    <View className="bg-binance-surface px-3 py-1 rounded-md border border-binance-lightGray/10">
-                      <Text className="text-binance-gray text-[10px] font-sans">LAT: {location.coords.latitude.toFixed(6)}</Text>
+                  <View
+                    className="flex-row mt-6 space-x-3"
+                  >
+                    <View className="bg-binance-surface px-4 py-2 rounded-xl border border-binance-lightGray/20 shadow-sm">
+                      <Text className="text-binance-gray text-[10px] font-sans font-bold uppercase tracking-widest opacity-50 mb-0.5">Latitude</Text>
+                      <Text className="text-binance-text text-xs font-sans font-bold">{location.coords.latitude.toFixed(6)}</Text>
                     </View>
-                    <View className="bg-binance-surface px-3 py-1 rounded-md border border-binance-lightGray/10">
-                      <Text className="text-binance-gray text-[10px] font-sans">LNG: {location.coords.longitude.toFixed(6)}</Text>
+                    <View className="bg-binance-surface px-4 py-2 rounded-xl border border-binance-lightGray/20 shadow-sm">
+                      <Text className="text-binance-gray text-[10px] font-sans font-bold uppercase tracking-widest opacity-50 mb-0.5">Longitude</Text>
+                      <Text className="text-binance-text text-xs font-sans font-bold">{location.coords.longitude.toFixed(6)}</Text>
                     </View>
                   </View>
                 )}
 
+
                 {errorMsg && (
-                  <Text className="text-red-500 text-xs mt-2 font-sans font-medium text-center">{errorMsg}</Text>
+                  <Text
+                    className="text-red-500 text-xs mt-3 font-sans font-medium text-center"
+                  >
+                    {errorMsg}
+                  </Text>
                 )}
               </View>
 
-              <View className="mt-8 mb-10">
+
+              <View
+                className="mt-12 mb-10"
+              >
                 {permissionStatus !== 'granted' ? (
-                  <View className="bg-binance-surface p-6 rounded-2xl border border-binance-lightGray/10 items-center">
-                    <View className="w-12 h-12 bg-binance-bg rounded-full items-center justify-center mb-4">
+                  <View
+                    className="bg-binance-surface p-8 rounded-[32px] border border-binance-lightGray/20 items-center shadow-sm"
+                  >
+
+                    <View className="w-16 h-16 bg-binance-bg rounded-2xl items-center justify-center mb-6 shadow-sm border border-binance-lightGray/10">
                       <Ionicons
-                        name={permissionStatus === 'denied' ? "alert-circle" : "location"}
-                        size={24}
+                        name={permissionStatus === 'denied' ? "alert-circle" : "location-outline"}
+                        size={32}
                         color={permissionStatus === 'denied' ? "#F6465D" : "#F0B90B"}
-                        className=""
                       />
                     </View>
-                    <Text className="text-binance-text font-bold text-lg text-center font-sans">
-                      {permissionStatus === 'denied' ? "Location Restricted" : "Location Required"}
+                    <Text className="text-binance-text font-bold text-xl text-center font-sans">
+                      {permissionStatus === 'denied' ? "Permission Denied" : "Track Anywhere"}
+                    </Text>
+                    <Text className="text-binance-gray text-center mt-2 font-sans text-sm px-4">
+                      {permissionStatus === 'denied'
+                        ? "We need your location to verify attendance. Please enable it in settings."
+                        : "Enable high-precision GPS to start recording your work hours effortlessly."}
                     </Text>
 
                     <TouchableOpacity
-                      onPress={permissionStatus === 'denied' ? () => Linking.openSettings() : requestPermission}
-                      className="bg-binance-yellow mt-4 px-8 py-3 rounded-lg shadow-sm w-full items-center"
+                      onPress={() => {
+                        onButtonPress();
+                        permissionStatus === 'denied' ? Linking.openSettings() : requestPermission();
+                      }}
+                      activeOpacity={0.8}
+                      className="bg-binance-yellow mt-8 px-10 py-4 rounded-[20px] shadow-sm w-full items-center"
                     >
-                      <Text className="text-binance-text font-bold font-sans">
-                        {permissionStatus === 'denied' ? "Open Settings" : "Enable Location"}
+                      <Text className="text-binance-text font-bold font-sans text-lg">
+                        {permissionStatus === 'denied' ? "Open System Settings" : "Allow GPS Access"}
                       </Text>
                     </TouchableOpacity>
                   </View>
                 ) : !showLogin ? (
                   <View className="space-y-4">
                     <TouchableOpacity
-                      onPress={() => setShowLogin(true)}
-                      className="bg-binance-yellow p-4 rounded-lg items-center shadow-sm"
+                      onPress={() => {
+                        onButtonPress();
+                        setShowLogin(true);
+                      }}
+                      activeOpacity={0.8}
+                      className="bg-binance-yellow p-5 rounded-[24px] items-center shadow-md"
                     >
-                      <Text className="text-binance-text font-bold text-lg font-sans">Login</Text>
+                      <Text className="text-binance-text font-bold text-xl font-sans">Continue to Login</Text>
                     </TouchableOpacity>
                   </View>
                 ) : (
                   <View>
-                    <View className="flex-row items-center mb-8">
-                      <TouchableOpacity onPress={() => setShowLogin(false)} className="p-2 -ml-2">
-                        <Ionicons name="arrow-back" size={24} color="#1E2329" />
+
+
+                    <View className="flex-row items-center mb-10">
+                      <TouchableOpacity
+                        onPress={() => {
+                          onButtonPress();
+                          setShowLogin(false);
+                        }}
+                        className="w-10 h-10 bg-binance-surface rounded-xl items-center justify-center border border-binance-lightGray/20"
+                      >
+                        <Ionicons name="chevron-back" size={24} color="#1E2329" />
                       </TouchableOpacity>
-                      <Text className="text-2xl font-bold text-binance-text ml-4 font-sans">Welcome Back</Text>
+                      <Text className="text-2xl font-bold text-binance-text ml-5 font-sans tracking-tight">Identity Access</Text>
                     </View>
 
-                    <View className="space-y-4">
+                    <View className="space-y-6">
                       <View>
-                        <Text className="text-binance-gray text-xs font-bold mb-2 ml-1 uppercase">Email</Text>
-                        <TextInput
-                          placeholder="Enter your email"
-                          placeholderTextColor="#707A8A"
-                          className="bg-binance-surface p-4 rounded-lg text-binance-text text-lg font-sans border border-binance-lightGray"
-                          value={email}
-                          onChangeText={setEmail}
-                          autoCapitalize="none"
-                          keyboardType="email-address"
-                        />
+                        <Text className="text-binance-gray text-[10px] font-bold mb-2 ml-1 uppercase tracking-widest opacity-60">Credentials / Email</Text>
+                        <View className="bg-binance-surface p-1 rounded-[20px] border border-binance-lightGray/30 flex-row items-center focus:border-binance-yellow">
+                          <View className="w-12 h-12 items-center justify-center">
+                            <Ionicons name="mail-outline" size={20} color="#707A8A" />
+                          </View>
+                          <TextInput
+                            placeholder="user@organization.com"
+                            placeholderTextColor="#707A8A"
+                            className="flex-1 p-3 text-binance-text text-lg font-sans"
+                            value={email}
+                            onChangeText={setEmail}
+                            autoCapitalize="none"
+                            keyboardType="email-address"
+                          />
+                        </View>
                       </View>
 
-                      <View className="mt-4">
-                        <Text className="text-binance-gray text-xs font-bold mb-2 ml-1 uppercase">Password</Text>
-                        <TextInput
-                          placeholder="Enter your password"
-                          placeholderTextColor="#707A8A"
-                          className="bg-binance-surface p-4 rounded-lg text-binance-text text-lg font-sans border border-binance-lightGray"
-                          secureTextEntry
-                          value={password}
-                          onChangeText={setPassword}
-                        />
+                      <View className="mt-6">
+                        <Text className="text-binance-gray text-[10px] font-bold mb-2 ml-1 uppercase tracking-widest opacity-60">Identity / Password</Text>
+                        <View className="bg-binance-surface p-1 rounded-[20px] border border-binance-lightGray/30 flex-row items-center">
+                          <View className="w-12 h-12 items-center justify-center">
+                            <Ionicons name="lock-closed-outline" size={20} color="#707A8A" />
+                          </View>
+                          <TextInput
+                            placeholder="••••••••"
+                            placeholderTextColor="#707A8A"
+                            className="flex-1 p-3 text-binance-text text-lg font-sans"
+                            secureTextEntry
+                            value={password}
+                            onChangeText={setPassword}
+                          />
+                        </View>
                       </View>
 
-                      <View className="mt-8">
+                      <View className="mt-12">
                         {isLoginLoading ? (
-                          <View className="bg-binance-yellow p-4 rounded-lg items-center opacity-70">
-                            <ActivityIndicator color="#1E2329" />
+                          <View className="bg-binance-yellow p-5 rounded-[24px] items-center opacity-70 shadow-sm">
+                            <ActivityIndicator color="#1E2329" size="small" />
                           </View>
                         ) : (
                           <TouchableOpacity
                             onPress={handleLogin}
-                            className="bg-binance-yellow p-4 rounded-lg items-center shadow-sm"
+                            activeOpacity={0.8}
+                            className="bg-binance-yellow p-5 rounded-[24px] items-center shadow-lg transform active:scale-95"
                           >
-                            <Text className="text-binance-text font-bold text-lg font-sans">Log In</Text>
+                            <Text className="text-binance-text font-bold text-xl font-sans">Grant Access</Text>
                           </TouchableOpacity>
                         )}
                       </View>
@@ -256,5 +296,7 @@ export default function Auth() {
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
     </SafeAreaView>
+
   );
 }
+

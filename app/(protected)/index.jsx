@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from 'expo-haptics';
 import { useCallback, useState } from "react";
 import { Alert, Modal, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
@@ -11,6 +12,7 @@ import {
     useGetTodaySessionQuery,
     useStartWorkMutation,
     useEndWorkMutation,
+    workSessionApi,
 } from "../../redux/api/workSessionApi";
 import { logout } from "../../redux/slices/authSlice";
 
@@ -128,8 +130,15 @@ export default function Home() {
     }, []);
 
     const handleRefresh = useCallback(() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         refetch();
     }, [refetch]);
+
+    const handleLogout = useCallback(() => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+        dispatch(logout());
+        dispatch(workSessionApi.util.resetApiState());
+    }, [dispatch]);
 
     const isLoading = isSessionInitialLoading || isSessionFetching || isStarting || isEnding || isSubmitting;
 
@@ -137,40 +146,58 @@ export default function Home() {
         <>
             <ScrollView
                 className="flex-1 bg-binance-bg pb-10"
+                showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl
                         refreshing={isSessionFetching}
                         onRefresh={handleRefresh}
-                        tintColor="#F0B90B" // Binance Yellow
+                        tintColor="#F0B90B"
                         colors={["#F0B90B"]}
                     />
                 }
             >
-                <View className="pt-14 px-5 bg-binance-bg pb-6 border-b border-binance-lightGray">
-                    <View className="flex-row items-center justify-between mb-6">
+                {/* Premium Header */}
+                <View
+                    className="pt-14 px-6 bg-binance-bg pb-8 border-b border-binance-lightGray/10"
+                >
+                    <View className="flex-row items-center justify-between">
                         <View className="flex-row items-center">
-                            <View className="w-8 h-8 rounded-full bg-binance-lightGray items-center justify-center">
-                                <Ionicons name="person" size={16} color="#707A8A" />
+                            <View className="w-12 h-12 rounded-2xl bg-binance-surface items-center justify-center border border-binance-lightGray/20 shadow-sm">
+                                <Ionicons name="person-outline" size={20} color="#707A8A" />
                             </View>
-                            <Text className="ml-3 text-binance-text font-sans font-bold text-sm">{user?.email}</Text>
+                            <View className="ml-4">
+                                <Text className="text-binance-gray text-[10px] font-bold uppercase tracking-widest opacity-60 mb-0.5">Authenticated as</Text>
+                                <Text className="text-binance-text font-sans font-bold text-sm tracking-tight">{user?.email}</Text>
+                            </View>
                         </View>
-                        <TouchableOpacity onPress={() => dispatch(logout())}>
-                            <Ionicons name="log-out-outline" size={24} color="#707A8A" />
+                        <TouchableOpacity
+                            onPress={handleLogout}
+                            activeOpacity={0.7}
+                            className="w-10 h-10 items-center justify-center bg-binance-surface rounded-xl border border-binance-lightGray/20"
+                        >
+                            <Ionicons name="log-out-outline" size={22} color="#F6465D" />
                         </TouchableOpacity>
                     </View>
                 </View>
 
-                <View className="px-5 pt-6">
-                    <Text className="text-binance-text font-bold text-2xl mb-2">Attendance</Text>
-                    <Text className="text-binance-gray text-sm">
-                        Record your work session with a selfie
+                <View
+                    className="px-6 pt-8"
+                >
+                    <Text className="text-binance-text font-bold text-3xl tracking-tight">Attendance</Text>
+                    <Text className="text-binance-gray text-base mt-1 font-sans opacity-80">
+                        Record your duty cycle with identity verification
                     </Text>
                 </View>
 
-                <View className="px-5 mt-6">
+                <View
+                    className="px-6 mt-8"
+                >
                     <StatusCard session={session} isLoading={isSessionInitialLoading} />
                 </View>
-                <View className="px-5 mt-6">
+
+                <View
+                    className="px-6 mt-8"
+                >
                     <AttendanceButton
                         status={sessionStatus}
                         isLoading={isLoading}
@@ -178,36 +205,50 @@ export default function Home() {
                     />
                 </View>
 
-                {/* info Card */}
-                <View className="px-5 mt-6">
-                    <View className="bg-binance-yellow/10 p-4 rounded-xl flex-row items-start">
-                        <Ionicons name="information-circle" size={20} color="#F0B90B" />
-                        <View className="ml-3 flex-1">
-                            <Text className="text-binance-text font-bold text-sm mb-1">
-                                How it works
+                {/* Premium Info Card */}
+                <View
+                    className="px-6 mt-10"
+                >
+                    <View className="bg-binance-surface p-6 rounded-[32px] border border-binance-lightGray/30 shadow-sm">
+                        <View className="flex-row items-center mb-4">
+                            <View className="w-8 h-8 bg-binance-yellow/10 rounded-lg items-center justify-center">
+                                <Ionicons name="information-circle" size={18} color="#F0B90B" />
+                            </View>
+                            <Text className="text-binance-text font-bold text-base ml-3 tracking-tight">
+                                Protocol Guidelines
                             </Text>
-                            <Text className="text-binance-gray text-xs leading-5">
-                                • Tap the button to start or end your work session{'\n'}
-                                • Take a selfie when prompted{'\n'}
-                                • Your GPS location will be recorded automatically{'\n'}
-                                • You can only have one session per day
-                            </Text>
+                        </View>
+                        <View className="space-y-4">
+                            {[
+                                { text: 'Trigger the action to start/end your shift', icon: 'radio-button-on' },
+                                { text: 'Identity verification via selfie is mandatory', icon: 'camera-outline' },
+                                { text: 'Geospatial coordinates are logged as proof', icon: 'location-outline' },
+                                { text: 'Only one duty cycle is permitted per day', icon: 'calendar-outline' }
+                            ].map((item, index) => (
+                                <View key={index} className="flex-row items-start mb-3">
+                                    <View className="mt-1 w-1.5 h-1.5 rounded-full bg-binance-yellow mr-3" />
+                                    <Text className="text-binance-gray text-sm leading-5 font-medium opacity-80 flex-1">
+                                        {item.text}
+                                    </Text>
+                                </View>
+                            ))}
                         </View>
                     </View>
                 </View>
 
-                {/* location Info (when session is active) */}
+
+                {/* location Info Card */}
                 {session?.start_lat && (
-                    <View className="px-5 mt-4">
-                        <View className="bg-binance-surface p-4 rounded-2xl border border-binance-lightGray flex-row items-center">
-                            <View className="w-10 h-10 bg-binance-yellow/10 rounded-full items-center justify-center">
-                                <Ionicons name="location" size={20} color="#F0B90B" />
+                    <View
+                        className="px-6 mt-6 pb-10"
+                    >
+                        <View className="bg-binance-bg p-5 rounded-[28px] border border-binance-lightGray/30 flex-row items-center shadow-sm">
+                            <View className="w-12 h-12 bg-binance-yellow/10 rounded-2xl items-center justify-center border border-binance-yellow/5">
+                                <Ionicons name="navigate" size={22} color="#F0B90B" />
                             </View>
-                            <View className="ml-3 flex-1">
-                                <Text className="text-binance-text font-bold text-sm">
-                                    Check-in Location
-                                </Text>
-                                <Text className="text-binance-gray text-xs">
+                            <View className="ml-4 flex-1">
+                                <Text className="text-binance-gray text-[10px] font-bold uppercase tracking-widest opacity-50 mb-0.5">Logged Commencement</Text>
+                                <Text className="text-binance-text font-bold text-sm tracking-tight italic opacity-90">
                                     {session.start_lat.toFixed(6)}, {session.start_lng.toFixed(6)}
                                 </Text>
                             </View>
@@ -215,7 +256,8 @@ export default function Home() {
                     </View>
                 )}
 
-                <View className="pb-20" />
+
+                <View className="h-20" />
             </ScrollView>
 
             {/* selfie Camera Modal */}

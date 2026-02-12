@@ -1,26 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
-// import MapView, { Marker, Polyline } from "react-native-maps";
+import { useEffect, useRef, useCallback } from "react";
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View, StyleSheet } from "react-native";
 import { useGetSessionDetailsQuery } from "../../../redux/api/workSessionApi";
-
-import { useEffect, useRef } from "react";
-import { StyleSheet } from "react-native";
-
-const styles = StyleSheet.create({
-    mapContainer: {
-        width: '100%',
-        height: 320,
-        borderRadius: 20,
-        overflow: 'hidden',
-        backgroundColor: '#161A1E',
-        borderWidth: 1,
-        borderColor: '#2B3139',
-    },
-    map: {
-        flex: 1,
-    },
-});
 
 export default function SessionDetails() {
     const { id } = useLocalSearchParams();
@@ -55,14 +38,10 @@ export default function SessionDetails() {
         longitudeDelta: 0.012
     };
 
-    // Auto-center map when liveLoc changes
+    // Auto-center map when liveLoc changes - placeholder logic
     useEffect(() => {
         if (liveLoc && mapRef.current) {
-            mapRef.current.animateToRegion({
-                ...liveLoc,
-                latitudeDelta: 0.012,
-                longitudeDelta: 0.012
-            }, 1000);
+            // mapRef.current.animateToRegion(...)
         }
     }, [liveLoc?.latitude, liveLoc?.longitude]);
 
@@ -72,10 +51,15 @@ export default function SessionDetails() {
         const recorded = new Date(dateStr);
         const diffSeconds = Math.floor((now - recorded) / 1000);
 
-        if (diffSeconds < 60) return 'Just now';
+        if (diffSeconds < 60) return 'Signal: Live';
         if (diffSeconds < 3600) return `${Math.floor(diffSeconds / 60)}m ago`;
         return `${Math.floor(diffSeconds / 3600)}h ago`;
     };
+
+    const handleBack = useCallback(() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        router.back();
+    }, [router]);
 
     if (isLoading) {
         return (
@@ -95,169 +79,138 @@ export default function SessionDetails() {
 
     return (
         <View className="flex-1 bg-binance-bg">
-            <View className="pt-14 px-5 pb-6 border-b border-binance-lightGray bg-binance-bg flex-row items-center">
-                <Ionicons
-                    name="arrow-back"
-                    size={24}
-                    color="#1E2329"
-                    onPress={() => router.back()}
-                    style={{ marginRight: 15 }}
-                />
+            <View
+                className="pt-14 px-6 pb-8 border-b border-binance-lightGray/10 bg-binance-bg flex-row items-center"
+            >
+                <TouchableOpacity
+                    onPress={handleBack}
+                    activeOpacity={0.7}
+                    className="w-10 h-10 items-center justify-center bg-binance-surface rounded-xl border border-binance-lightGray/20 mr-4"
+                >
+                    <Ionicons name="arrow-back" size={20} color="#1E2329" />
+                </TouchableOpacity>
                 <View className="flex-1">
-                    <Text className="text-xl font-bold text-binance-text font-sans">Session Details</Text>
-                    <Text className="text-binance-gray font-sans text-xs">ID: {id}</Text>
+                    <Text className="text-xl font-bold text-binance-text font-sans tracking-tight">Session Verification</Text>
+                    <Text className="text-binance-gray font-sans text-[10px] opacity-60 font-bold uppercase tracking-widest" numberOfLines={1}>Reference: #{id.toString().slice(-8).toUpperCase()}</Text>
                 </View>
             </View>
 
-            <ScrollView className="flex-1">
-                <View className="px-5 mt-4">
-                    <View style={styles.mapContainer}>
-                        {/* <MapView
-                            ref={mapRef}
-                            style={styles.map}
-                            initialRegion={initialRegion}
-                            key={id} // Force re-render if ID changes
-                        >
-                            <Marker
-                                coordinate={startLoc}
-                                title="Start Location"
-                                pinColor="#707A8A"
-                            />
-                            {liveLoc && (
-                                <Marker
-                                    coordinate={liveLoc}
-                                    title="Live Location"
-                                    description={`Last signal: ${session.liveLocation.recorded_at}`}
-                                    pinColor="#F0B90B"
-                                >
-                                    <View className="items-center">
-                                        <View className="bg-white px-2 py-1 rounded-lg border border-binance-yellow shadow-sm mb-1">
-                                            <Text className="text-[8px] font-bold text-binance-yellow">LIVE</Text>
-                                        </View>
-                                        <View className="bg-binance-yellow p-1.5 rounded-full border-2 border-white shadow-md">
-                                            <Ionicons name="navigate" size={16} color="#1E2329" />
-                                        </View>
-                                    </View>
-                                </Marker>
-                            )}
-                            {history.length > 1 && (
-                                <Polyline
-                                    coordinates={[startLoc, ...history, ...(liveLoc ? [liveLoc] : [])]}
-                                    strokeColor="#F0B90B"
-                                    strokeWidth={3}
-                                    lineDashPattern={[0]}
-                                />
-                            )}
-                        </MapView> */}
-
-                        {liveLoc && (
-                            <TouchableOpacity
-                                onPress={() => mapRef.current?.animateToRegion({ ...liveLoc, latitudeDelta: 0.012, longitudeDelta: 0.012 })}
-                                className="absolute bottom-4 right-4 bg-white p-3 rounded-full shadow-lg border border-binance-lightGray"
-                                activeOpacity={0.8}
-                            >
-                                <Ionicons name="compass" size={24} color="#F0B90B" />
-                            </TouchableOpacity>
-                        )}
-
-                        {/* subtle Location Badge floating on map - bottom left like auth.jsx */}
-                        <View className="absolute bottom-4 left-4 bg-binance-bg/80 px-3 py-1.5 rounded-full border border-binance-lightGray/20">
-                            <View className="flex-row items-center">
-                                <View className={`w-2 h-2 rounded-full mr-2 ${liveLoc ? 'bg-green-500' : 'bg-binance-yellow'}`} />
-                                <Text className="text-binance-text text-[10px] font-sans font-bold uppercase tracking-wider">
-                                    {liveLoc ? 'GPS Active' : 'Locating...'}
-                                </Text>
-                            </View>
-                        </View>
-                    </View>
-                </View>
-
-                {/* Coordinate Boxes - matching auth.jsx style (smaller) */}
-                {liveLoc && (
-                    <View className="flex-row px-5 mt-4 space-x-3">
-                        <View className="bg-binance-surface px-3 py-1.5 rounded-lg border border-binance-lightGray/10 flex-1">
-                            <Text className="text-binance-gray text-[9px] font-sans uppercase font-bold mb-0.5">LATITUDE</Text>
-                            <Text className="text-binance-text font-bold font-sans text-xs">{liveLoc.latitude.toFixed(6)}</Text>
-                        </View>
-                        <View className="bg-binance-surface px-3 py-1.5 rounded-lg border border-binance-lightGray/10 flex-1">
-                            <Text className="text-binance-gray text-[9px] font-sans uppercase font-bold mb-0.5">LONGITUDE</Text>
-                            <Text className="text-binance-text font-bold font-sans text-xs">{liveLoc.longitude.toFixed(6)}</Text>
-                        </View>
-                    </View>
-                )}
-
-                <View className="p-5">
+            <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+                <View className="p-6">
+                    {/* Live Track Card */}
                     {session.liveLocation && (
-                        <View className="bg-binance-yellow/5 p-4 rounded-2xl border border-binance-yellow/30 shadow-sm mb-4">
-                            <View className="flex-row items-center justify-between mb-3">
+                        <View
+                            className="bg-binance-surface p-6 rounded-[32px] shadow-sm mb-6"
+                        >
+                            <View className="flex-row items-center justify-between mb-6">
                                 <View className="flex-row items-center">
-                                    <View className="w-2 h-2 rounded-full bg-binance-yellow mr-2 animate-pulse" />
-                                    <Text className="text-binance-yellow text-[10px] font-bold uppercase tracking-wider">Live Track</Text>
+                                    <View className="w-2.5 h-2.5 rounded-full bg-binance-yellow mr-3" />
+                                    <Text className="text-binance-yellow text-xs font-bold uppercase tracking-widest">Active Signal</Text>
                                 </View>
-                                <Text className="text-binance-gray text-[10px] font-sans">
-                                    Last signal: {timeAgo(session.liveLocation.recorded_at)}
-                                </Text>
+                                <View className="bg-binance-bg/50 px-3 py-1 rounded-full border border-binance-yellow/10">
+                                    <Text className="text-binance-text text-[10px] font-sans font-bold">
+                                        {timeAgo(session.liveLocation.recorded_at)}
+                                    </Text>
+                                </View>
                             </View>
 
-                            <View className="flex-row items-start justify-between">
+                            <View className="flex-row items-center justify-between mb-8">
                                 <View className="flex-1">
-                                    <Text className="text-binance-gray text-[10px] mb-1">Current Coordinates</Text>
-                                    <Text className="text-binance-text font-bold font-sans text-sm">
-                                        {session.liveLocation.lat.toFixed(6)}, {session.liveLocation.lng.toFixed(6)}
+                                    <Text className="text-binance-gray text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1.5">Latitudinal Index</Text>
+                                    <Text className="text-binance-text font-bold font-sans text-lg tracking-tight">
+                                        {session.liveLocation.lat.toFixed(6)}
                                     </Text>
                                 </View>
-                                <View className="items-end">
-                                    <Text className="text-binance-gray text-[10px] mb-1">Recorded At</Text>
-                                    <Text className="text-binance-text font-bold font-sans text-[11px]">
-                                        {new Date(session.liveLocation.recorded_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                                <View className="w-[1px] h-8 bg-binance-yellow/10 mx-6" />
+                                <View className="flex-1">
+                                    <Text className="text-binance-gray text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1.5">Longitudinal Index</Text>
+                                    <Text className="text-binance-text font-bold font-sans text-lg tracking-tight">
+                                        {session.liveLocation.lng.toFixed(6)}
                                     </Text>
                                 </View>
+                            </View>
+
+                            <View className="flex-row items-center justify-between pt-4 border-t border-binance-yellow/5">
+                                <Text className="text-binance-gray text-[10px] font-bold uppercase tracking-widest opacity-60">Last Transmission</Text>
+                                <Text className="text-binance-text font-bold font-sans text-xs">
+                                    {new Date(session.liveLocation.recorded_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                                </Text>
                             </View>
                         </View>
                     )}
 
-                    <View className="bg-binance-surface p-4 rounded-2xl border border-binance-lightGray shadow-sm mb-4">
-                        <Text className="text-binance-gray text-[10px] font-bold mb-3 uppercase">Session Info</Text>
+                    {/* Metadata Card */}
+                    <View
+                        className="bg-binance-surface p-6 rounded-[32px] border border-binance-lightGray/30 shadow-sm mb-6"
+                    >
+                        <Text className="text-binance-gray text-[10px] font-bold mb-6 uppercase tracking-widest opacity-60">Session Metadata</Text>
 
-                        <View className="flex-row items-center justify-between mb-4">
-                            <Text className="text-binance-gray text-xs font-sans">Date</Text>
-                            <Text className="text-binance-text font-bold font-sans text-xs">
-                                {new Date(session.work_date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                        <View className="flex-row items-center justify-between mb-5">
+                            <Text className="text-binance-gray text-sm font-medium opacity-80">Registry Date</Text>
+                            <Text className="text-binance-text font-bold font-sans text-sm tracking-tight">
+                                {new Date(session.work_date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                             </Text>
                         </View>
 
-                        <View className="flex-row items-center justify-between mb-4">
-                            <Text className="text-binance-gray text-xs font-sans">Status</Text>
-                            <View className="bg-binance-bg px-2 py-0.5 rounded border border-binance-lightGray">
-                                <Text className="text-binance-yellow text-[10px] font-bold uppercase">{session.status}</Text>
+                        <View className="flex-row items-center justify-between mb-5">
+                            <Text className="text-binance-gray text-sm font-medium opacity-80">Workflow Status</Text>
+                            <View className="bg-binance-yellow/10 px-3 py-1 rounded-lg border border-binance-yellow/10">
+                                <Text className="text-binance-yellow text-[10px] font-bold uppercase tracking-widest">{session.status}</Text>
                             </View>
                         </View>
 
-                        <View className="flex-row items-center justify-between">
-                            <Text className="text-binance-gray text-xs font-sans">Started At</Text>
-                            <Text className="text-binance-text font-bold font-sans text-xs">
+                        <View className="flex-row items-center justify-between pt-5 border-t border-binance-lightGray/10">
+                            <Text className="text-binance-gray text-sm font-medium opacity-80">Commencement</Text>
+                            <Text className="text-binance-text font-bold font-sans text-sm tracking-tight">
                                 {new Date(session.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                             </Text>
                         </View>
                     </View>
 
-                    <View className="bg-binance-surface p-4 rounded-2xl border border-binance-lightGray shadow-sm">
-                        <Text className="text-binance-gray text-[10px] font-bold mb-3 uppercase">Location Logs ({history.length})</Text>
+                    {/* Timeline Card */}
+                    <View
+                        className="bg-binance-surface p-6 rounded-[32px] border border-binance-lightGray/30 shadow-sm mb-10"
+                    >
+                        <View className="flex-row items-center justify-between mb-6">
+                            <Text className="text-binance-gray text-[10px] font-bold uppercase tracking-widest opacity-60">Geospatial Timeline</Text>
+                            <View className="bg-binance-lightGray/10 px-2.5 py-1 rounded-lg">
+                                <Text className="text-binance-gray text-[9px] font-bold uppercase">{history.length} nodes</Text>
+                            </View>
+                        </View>
+
                         {history.length === 0 ? (
-                            <Text className="text-binance-gray text-xs font-sans italic text-center py-4">No movement history recorded</Text>
+                            <View className="items-center justify-center py-8">
+                                <Ionicons name="navigate-outline" size={32} color="#707A8A" className="opacity-20 mb-3" />
+                                <Text className="text-binance-gray text-xs font-medium italic opacity-60">No movement history recorded</Text>
+                            </View>
                         ) : (
-                            history.slice(0, 5).map((log, index) => (
-                                <View key={index} className="flex-row items-center justify-between mb-3 last:mb-0">
-                                    <View className="flex-row items-center">
-                                        <View className="w-1.5 h-1.5 rounded-full bg-binance-gray mr-2" />
-                                        <Text className="text-binance-gray text-[10px] font-sans">Log point {history.length - index}</Text>
+                            <View className="pl-2">
+                                {history.slice(0, 50).map((log, index) => (
+                                    <View key={index} className="flex-row items-start mb-6 last:mb-0">
+                                        <View className="items-center mr-4">
+                                            <View className={`w-2.5 h-2.5 rounded-full ${index === 0 ? 'bg-binance-yellow shadow-lg shadow-binance-yellow/50' : 'bg-binance-lightGray/40'} z-10`} />
+                                            {index !== history.length - 1 && index !== 49 && (
+                                                <View className="w-[1px] h-12 bg-binance-lightGray/20 absolute top-2.5" />
+                                            )}
+                                        </View>
+                                        <View className="flex-1 pt-0">
+                                            <Text className="text-binance-text font-bold font-sans text-sm tracking-tight">Point Node #{history.length - index}</Text>
+                                            <Text className="text-binance-gray text-[10px] mt-1 font-medium opacity-60 italic">
+                                                {log.latitude.toFixed(6)}, {log.longitude.toFixed(6)}
+                                            </Text>
+                                        </View>
                                     </View>
-                                    <Text className="text-binance-text font-sans text-[10px]">{log.latitude.toFixed(4)}, {log.longitude.toFixed(4)}</Text>
-                                </View>
-                            ))
+                                ))}
+                            </View>
                         )}
+
                         {history.length > 5 && (
-                            <Text className="text-binance-gray text-[10px] font-sans text-center mt-2">Showing last 5 points</Text>
+                            <TouchableOpacity
+                                activeOpacity={0.7}
+                                className="mt-6 pt-4 border-t border-binance-lightGray/10 items-center"
+                            >
+                                <Text className="text-binance-gray text-[10px] font-bold uppercase tracking-widest opacity-40">End of recent logs</Text>
+                            </TouchableOpacity>
                         )}
                     </View>
                 </View>
@@ -265,3 +218,4 @@ export default function SessionDetails() {
         </View>
     );
 }
+

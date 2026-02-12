@@ -5,42 +5,42 @@ export default function StatusCard({ session, isLoading }) {
     const getStatusConfig = () => {
         if (!session || session.status === 'NOT_STARTED') {
             return {
-                status: 'Ready to Start',
-                description: 'Tap below to begin your work session',
+                status: 'Identity Ready',
+                description: 'Awaiting session start',
                 color: 'text-binance-gray',
-                bgColor: 'bg-binance-lightGray',
-                icon: 'time-outline',
-                iconColor: '#707A8A',
+                accentColor: '#707A8A',
+                bgColor: 'bg-binance-lightGray/10',
+                icon: 'finger-print-outline',
             };
         }
 
         switch (session.status) {
             case 'WORKING':
                 return {
-                    status: 'Currently Working',
-                    description: 'Your session is active',
+                    status: 'Tracking Active',
+                    description: 'Work hours recorded',
                     color: 'text-binance-yellow',
-                    bgColor: 'bg-binance-yellow/20',
-                    icon: 'briefcase',
-                    iconColor: '#F0B90B',
+                    accentColor: '#F0B90B',
+                    bgColor: 'bg-binance-yellow/10',
+                    icon: 'flash',
                 };
             case 'COMPLETED':
                 return {
-                    status: 'Day Complete',
-                    description: 'Great job! See you tomorrow',
+                    status: 'Session Sealed',
+                    description: 'Verification complete',
                     color: 'text-[#10b981]',
-                    bgColor: 'bg-[#10b981]/20',
-                    icon: 'checkmark-circle',
-                    iconColor: '#10b981',
+                    accentColor: '#10b981',
+                    bgColor: 'bg-[#10b981]/10',
+                    icon: 'shield-checkmark',
                 };
             default:
                 return {
-                    status: 'Unknown',
+                    status: 'Status: Pending',
                     description: '',
                     color: 'text-binance-gray',
-                    bgColor: 'bg-binance-lightGray',
+                    accentColor: '#707A8A',
+                    bgColor: 'bg-binance-lightGray/10',
                     icon: 'help-circle',
-                    iconColor: '#707A8A',
                 };
         }
     };
@@ -59,45 +59,58 @@ export default function StatusCard({ session, isLoading }) {
 
     if (isLoading && !session) {
         return (
-            <View className="bg-binance-surface p-4 rounded-2xl border border-binance-lightGray">
-                <View className="items-center py-4">
-                    <Text className="text-binance-gray text-sm">Loading session...</Text>
-                </View>
+            <View
+                className="bg-binance-surface p-8 rounded-[32px] border border-binance-lightGray/20 shadow-sm items-center"
+            >
+                <Text className="text-binance-gray text-sm font-sans font-medium tracking-wide">Synchronizing identity...</Text>
             </View>
         );
     }
 
 
     return (
-        <View className="bg-binance-surface rounded-2xl border border-binance-lightGray overflow-hidden">
-            {/* status header */}
-            <View className={`${config.bgColor} px-4 py-3 flex-row items-center justify-between`}>
+        <View
+            className="bg-binance-surface rounded-[32px] border border-binance-lightGray/30 overflow-hidden shadow-sm"
+        >
+            {/* Glossy Header Area */}
+            <View className="px-6 py-5 flex-row items-center justify-between border-b border-binance-lightGray/10">
                 <View className="flex-row items-center">
-                    <Ionicons name={config.icon} size={20} color={config.iconColor} />
-                    <Text className={`ml-2 font-bold ${config.color}`}>
-                        {config.status}
+                    <View className={`w-10 h-10 ${config.bgColor} rounded-2xl items-center justify-center border border-binance-lightGray/5`}>
+                        <Ionicons name={config.icon} size={20} color={config.accentColor} />
+                    </View>
+                    <View className="ml-4">
+                        <Text className={`text-base font-bold font-sans tracking-tight ${config.color}`}>
+                            {config.status}
+                        </Text>
+                        <Text className="text-binance-gray text-[10px] uppercase font-bold tracking-widest opacity-60">
+                            {config.description}
+                        </Text>
+                    </View>
+                </View>
+                <View className="bg-binance-lightGray/10 px-3 py-1.5 rounded-lg border border-binance-lightGray/5">
+                    <Text className="text-binance-text text-[10px] font-sans font-bold">
+                        {new Date().toLocaleDateString('en-US', {
+                            weekday: 'short',
+                            day: 'numeric'
+                        })}
                     </Text>
                 </View>
-                <Text className="text-binance-gray text-xs">
-                    {new Date().toLocaleDateString('en-US', {
-                        weekday: 'short',
-                        month: 'short',
-                        day: 'numeric'
-                    })}
-                </Text>
             </View>
 
-            {/* time details */}
-            <View className="flex-row p-4">
-                <View className="flex-1 items-center border-r border-binance-lightGray">
-                    <Text className="text-binance-gray text-xs mb-1">Start Time</Text>
-                    <Text className="text-binance-text font-bold text-lg">
+            {/* Precision Time Block */}
+            <View className="flex-row p-6 items-center">
+                <View className="flex-1">
+                    <Text className="text-binance-gray text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1">Commencement</Text>
+                    <Text className="text-binance-text font-bold text-2xl tracking-tighter">
                         {formatTime(session?.start_time)}
                     </Text>
                 </View>
-                <View className="flex-1 items-center">
-                    <Text className="text-binance-gray text-xs mb-1">End Time</Text>
-                    <Text className="text-binance-text font-bold text-lg">
+
+                <View className="h-8 w-[1px] bg-binance-lightGray/20 mx-4" />
+
+                <View className="flex-1">
+                    <Text className="text-binance-gray text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1">Termination</Text>
+                    <Text className="text-binance-text font-bold text-2xl tracking-tighter">
                         {formatTime(session?.end_time)}
                     </Text>
                 </View>

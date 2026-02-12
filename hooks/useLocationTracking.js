@@ -44,15 +44,31 @@ export const useLocationTracking = () => {
             if (isWorking) {
                 // --- START tracking ---
 
-                // 1. Request foreground permission
-                const { status: fgStatus } = await Location.requestForegroundPermissionsAsync();
+                // 1. Check/Request foreground permission
+                const { status: currentFgStatus } = await Location.getForegroundPermissionsAsync();
+                let fgStatus = currentFgStatus;
+
+                if (fgStatus !== 'granted') {
+                    console.log('[LocationTracking] Requesting foreground permission...');
+                    const { status: requestedFgStatus } = await Location.requestForegroundPermissionsAsync();
+                    fgStatus = requestedFgStatus;
+                }
+
                 if (fgStatus !== 'granted') {
                     console.warn('[LocationTracking] Foreground permission denied');
                     return;
                 }
 
-                // 2. Request background permission
-                const { status: bgStatus } = await Location.requestBackgroundPermissionsAsync();
+                // 2. Check/Request background permission
+                const { status: currentBgStatus } = await Location.getBackgroundPermissionsAsync();
+                let bgStatus = currentBgStatus;
+
+                if (bgStatus !== 'granted') {
+                    console.log('[LocationTracking] Requesting background permission...');
+                    const { status: requestedBgStatus } = await Location.requestBackgroundPermissionsAsync();
+                    bgStatus = requestedBgStatus;
+                }
+
                 if (bgStatus !== 'granted') {
                     console.warn('[LocationTracking] Background permission denied');
                     return;
