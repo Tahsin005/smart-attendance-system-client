@@ -3,6 +3,7 @@ import { adminApi } from './api/adminApi';
 import { authApi } from './api/authApi';
 import { healthApi } from './api/healthApi';
 import { workSessionApi } from './api/workSessionApi';
+import { notificationApi } from './api/notificationApi';
 import authReducer from './slices/authSlice';
 
 const appReducer = combineReducers({
@@ -11,6 +12,7 @@ const appReducer = combineReducers({
     [workSessionApi.reducerPath]: workSessionApi.reducer,
     [adminApi.reducerPath]: adminApi.reducer,
     [healthApi.reducerPath]: healthApi.reducer,
+    [notificationApi.reducerPath]: notificationApi.reducer,
 });
 
 const rootReducer = (state, action) => {
@@ -40,5 +42,6 @@ export const store = configureStore({
             .concat(authApi.middleware)
             .concat(workSessionApi.middleware)
             .concat(adminApi.middleware)
-            .concat(healthApi.middleware),
+            .concat(healthApi.middleware)
+            .concat(notificationApi.middleware),
 });

@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from 'expo-haptics';
+import * as Clipboard from 'expo-clipboard';
 import { useCallback, useState } from "react";
-import { Alert, Modal, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Modal, RefreshControl, ScrollView, Text, TouchableOpacity, View, ActivityIndicator } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import AttendanceButton from "../../components/AttendanceButton";
 import SelfieCamera from "../../components/SelfieCamera";
@@ -15,6 +16,8 @@ import {
     workSessionApi,
 } from "../../redux/api/workSessionApi";
 import { logout } from "../../redux/slices/authSlice";
+import { useNotifications } from "../../hooks/useNotifications";
+import { useSendTestNotificationMutation } from "../../redux/api/notificationApi";
 
 export default function Home() {
     const { user } = useSelector((state) => state.auth);
@@ -30,9 +33,11 @@ export default function Home() {
     const [actionType, setActionType] = useState(null); // 'start' or 'end'
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // hooks
     const { requestAllPermissions, hasAllPermissions } = usePermissions();
     const { getCurrentLocation } = useLocation();
+    const { expoPushToken, notification, registerPushToken } = useNotifications();
+    const [sendTestNotification, { isLoading: isSendingTest }] = useSendTestNotificationMutation();
+    const [isRegistering, setIsRegistering] = useState(false);
 
     // get current session from API response
     const session = sessionData?.data;
@@ -139,6 +144,44 @@ export default function Home() {
         dispatch(logout());
         dispatch(workSessionApi.util.resetApiState());
     }, [dispatch]);
+
+    const handleCopyToken = async () => {
+        if (expoPushToken) {
+            await Clipboard.setStringAsync(expoPushToken);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            Alert.alert('Copied', 'Expo Push Token copied to clipboard');
+        }
+    };
+
+    const handleSendTest = async () => {
+        try {
+            await sendTestNotification({
+                title: 'Hello from Smart Attendance System Server!',
+                body: 'Testing notification for ' + user?.email + ' from Smart Attendance System Server!',
+                userId: user?.id
+            }).unwrap();
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        } catch (error) {
+            console.error('Test notification error:', error);
+            // If it's a 404, suggest registering the token
+            if (error?.status === 404) {
+                Alert.alert('No Token Found', 'Your device token is not registered in the database. Please tap "REGISTER TOKEN" and try again.');
+            } else {
+                Alert.alert('Error', 'Failed to send test notification');
+            }
+        }
+    };
+
+    const handleManualRegister = async () => {
+        setIsRegistering(true);
+        const success = await registerPushToken();
+        setIsRegistering(false);
+        if (success) {
+            Alert.alert('Success', 'Device token registered successfully');
+        } else {
+            Alert.alert('Error', 'Failed to register token. Check console for details.');
+        }
+    };
 
     const isLoading = isSessionInitialLoading || isSessionFetching || isStarting || isEnding || isSubmitting;
 
@@ -255,6 +298,71 @@ export default function Home() {
                         </View>
                     </View>
                 )}
+
+                {/* Notification Test Card */}
+                <View className="px-6 mt-6">
+                    <View className="bg-binance-surface p-6 rounded-[32px] border border-binance-lightGray/30 shadow-sm">
+                        <View className="flex-row items-center justify-between mb-4">
+                            <View className="flex-row items-center">
+                                <View className="w-8 h-8 bg-binance-blue/10 rounded-lg items-center justify-center">
+                                    <Ionicons name="notifications" size={18} color="#4A90E2" />
+                                </View>
+                                <Text className="text-binance-text font-bold text-base ml-3 tracking-tight">
+                                    Push Notification Test
+                                </Text>
+                            </View>
+                            <View className="flex-row">
+                                <TouchableOpacity
+                                    onPress={handleManualRegister}
+                                    disabled={!expoPushToken || isRegistering}
+                                    className="px-3 py-1 bg-binance-yellow/10 rounded-full mr-2"
+                                >
+                                    <Text className="text-binance-yellow text-[10px] font-bold">
+                                        {isRegistering ? 'SAVING...' : 'REGISTER TOKEN'}
+                                    </Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    onPress={handleCopyToken}
+                                    className="px-3 py-1 bg-binance-blue/10 rounded-full"
+                                >
+                                    <Text className="text-binance-blue text-[10px] font-bold">COPY</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+
+                        <View className="bg-binance-bg p-3 rounded-xl border border-binance-lightGray/10 mb-4">
+                            <Text className="text-binance-gray text-[10px] uppercase font-bold mb-1 opacity-50">Token</Text>
+                            <Text className="text-binance-text text-[11px] font-mono" numberOfLines={1}>
+                                {expoPushToken || 'Fetching token (use physical device)...'}
+                            </Text>
+                        </View>
+
+                        <TouchableOpacity
+                            onPress={handleSendTest}
+                            disabled={!expoPushToken || isSendingTest}
+                            className={`h-12 rounded-2xl items-center justify-center flex-row ${!expoPushToken || isSendingTest ? 'bg-binance-lightGray/20' : 'bg-binance-blue'}`}
+                            style={{ backgroundColor: !expoPushToken || isSendingTest ? '#2B3139' : '#4A90E2' }}
+                        >
+                            {isSendingTest ? (
+                                <ActivityIndicator color="#ffffff" size="small" />
+                            ) : (
+                                <>
+                                    <Ionicons name="paper-plane" size={18} color="#ffffff" className="mr-2" />
+                                    <Text className="text-white font-bold ml-2">Send Request to Server</Text>
+                                </>
+                            )}
+                        </TouchableOpacity>
+
+                        {notification && (
+                            <View className="mt-4 p-3 bg-green-500/10 rounded-xl border border-green-500/20">
+                                <Text className="text-green-500 text-[10px] font-bold uppercase mb-1">Last Received</Text>
+                                <Text className="text-binance-text text-xs font-medium">
+                                    {notification.request.content.title}: {notification.request.content.body}
+                                </Text>
+                            </View>
+                        )}
+                    </View>
+                </View>
 
 
                 <View className="h-20" />

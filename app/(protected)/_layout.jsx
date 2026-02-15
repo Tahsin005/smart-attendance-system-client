@@ -2,12 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import { useSelector } from 'react-redux';
 import { useLocationTracking } from '../../hooks/useLocationTracking';
+import { useNotifications } from '../../hooks/useNotifications';
 
 export default function ProtectedLayout() {
     const { isAdmin } = useSelector((state) => state.auth);
 
     // global location tracking for authenticated users
     useLocationTracking();
+    useNotifications();
 
     return (
         <Tabs screenOptions={{
